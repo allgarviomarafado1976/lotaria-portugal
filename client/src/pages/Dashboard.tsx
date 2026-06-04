@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Moon, Sun, LogOut, Target, TrendingUp, History } from "lucide-react";
+import { Moon, Sun, LogOut, Target, TrendingUp, History, BarChart3 } from "lucide-react";
+import { FrequencyChart } from "@/components/FrequencyChart";
+import { PeriodFilter } from "@/components/PeriodFilter";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -16,11 +18,16 @@ export default function Dashboard() {
   const [keyInput, setKeyInput] = useState("");
   const [checkResult, setCheckResult] = useState<any>(null);
   const [suggestedKey, setSuggestedKey] = useState<any>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState(12);
 
   // Queries
   const statsQuery = gameType === "euroMillion" 
     ? trpc.lottery.euroMillion.getStatistics.useQuery()
     : trpc.lottery.toto.getStatistics.useQuery();
+
+  const statsByPeriodQuery = gameType === "euroMillion"
+    ? trpc.lottery.euroMillion.getStatisticsByPeriod.useQuery({ months: selectedPeriod })
+    : trpc.lottery.toto.getStatisticsByPeriod.useQuery({ months: selectedPeriod });
 
   const drawsQuery = gameType === "euroMillion"
     ? trpc.lottery.euroMillion.getDraws.useQuery({ page, limit: 10 })
@@ -167,6 +174,21 @@ export default function Dashboard() {
 
           {/* Statistics Tab */}
           <TabsContent value="statistics" className="space-y-6">
+            <PeriodFilter selectedPeriod={selectedPeriod} onPeriodChange={setSelectedPeriod} />
+
+            {statsByPeriodQuery.isLoading ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-center text-muted-foreground">Carregando gráficos...</p>
+                </CardContent>
+              </Card>
+            ) : statsByPeriodQuery.data ? (
+              <FrequencyChart
+                topNumbers={statsByPeriodQuery.data.topNumbers || []}
+                bottomNumbers={statsByPeriodQuery.data.bottomNumbers || []}
+                gameType={gameType}
+              />
+            ) : null}
             {statsQuery.isLoading ? (
               <Card>
                 <CardContent className="pt-6">

@@ -351,3 +351,124 @@ export async function suggestTotoKey(strategy: "hot" | "cold" | "balanced") {
     strategy,
   };
 }
+
+
+// ============================================================================
+// Statistics by Period Functions
+// ============================================================================
+
+export async function getEuroMillionStatisticsByPeriod(months: number) {
+  const db = await getDb();
+  if (!db) {
+    return {
+      totalDraws: 0,
+      topNumbers: [],
+      bottomNumbers: [],
+      topStars: [],
+      bottomStars: [],
+    };
+  }
+
+  const draws = await db.select().from(euroMillionDraws);
+
+  // Filter by period
+  const cutoffDate = new Date();
+  cutoffDate.setMonth(cutoffDate.getMonth() - months);
+
+  const filteredDraws = draws.filter((draw) => {
+    const drawDate = new Date(draw.date);
+    return drawDate >= cutoffDate;
+  });
+
+  // Count frequency of each number
+  const numberFreq: Record<number, number> = {};
+  const starFreq: Record<number, number> = {};
+
+  filteredDraws.forEach((draw) => {
+    [draw.number1, draw.number2, draw.number3, draw.number4, draw.number5].forEach((num) => {
+      numberFreq[num] = (numberFreq[num] || 0) + 1;
+    });
+    [draw.star1, draw.star2].forEach((star) => {
+      starFreq[star] = (starFreq[star] || 0) + 1;
+    });
+  });
+
+  const topNumbers = Object.entries(numberFreq)
+    .map(([num, freq]) => ({ number: parseInt(num), frequency: freq }))
+    .sort((a, b) => b.frequency - a.frequency)
+    .slice(0, 10);
+
+  const bottomNumbers = Object.entries(numberFreq)
+    .map(([num, freq]) => ({ number: parseInt(num), frequency: freq }))
+    .sort((a, b) => a.frequency - b.frequency)
+    .slice(0, 10);
+
+  const topStars = Object.entries(starFreq)
+    .map(([star, freq]) => ({ number: parseInt(star), frequency: freq }))
+    .sort((a, b) => b.frequency - a.frequency)
+    .slice(0, 5);
+
+  const bottomStars = Object.entries(starFreq)
+    .map(([star, freq]) => ({ number: parseInt(star), frequency: freq }))
+    .sort((a, b) => a.frequency - b.frequency)
+    .slice(0, 5);
+
+  return { totalDraws: filteredDraws.length, topNumbers, bottomNumbers, topStars, bottomStars };
+}
+
+export async function getTotoStatisticsByPeriod(months: number) {
+  const db = await getDb();
+  if (!db) {
+    return {
+      totalDraws: 0,
+      topNumbers: [],
+      bottomNumbers: [],
+      topLuckyNumbers: [],
+      bottomLuckyNumbers: [],
+    };
+  }
+
+  const draws = await db.select().from(totoDraws);
+
+  // Filter by period
+  const cutoffDate = new Date();
+  cutoffDate.setMonth(cutoffDate.getMonth() - months);
+
+  const filteredDraws = draws.filter((draw) => {
+    const drawDate = new Date(draw.date);
+    return drawDate >= cutoffDate;
+  });
+
+  // Count frequency of each number
+  const numberFreq: Record<number, number> = {};
+  const luckyFreq: Record<number, number> = {};
+
+  filteredDraws.forEach((draw) => {
+    [draw.number1, draw.number2, draw.number3, draw.number4, draw.number5, draw.number6].forEach((num) => {
+      numberFreq[num] = (numberFreq[num] || 0) + 1;
+    });
+    luckyFreq[draw.luckyNumber] = (luckyFreq[draw.luckyNumber] || 0) + 1;
+  });
+
+  const topNumbers = Object.entries(numberFreq)
+    .map(([num, freq]) => ({ number: parseInt(num), frequency: freq }))
+    .sort((a, b) => b.frequency - a.frequency)
+    .slice(0, 10);
+
+  const bottomNumbers = Object.entries(numberFreq)
+    .map(([num, freq]) => ({ number: parseInt(num), frequency: freq }))
+    .sort((a, b) => a.frequency - b.frequency)
+    .slice(0, 10);
+
+  const topLuckyNumbers = Object.entries(luckyFreq)
+    .map(([num, freq]) => ({ number: parseInt(num), frequency: freq }))
+    .sort((a, b) => b.frequency - a.frequency)
+    .slice(0, 5);
+
+  const bottomLuckyNumbers = Object.entries(luckyFreq)
+    .map(([num, freq]) => ({ number: parseInt(num), frequency: freq }))
+    .sort((a, b) => a.frequency - b.frequency)
+    .slice(0, 5);
+
+  return { totalDraws: filteredDraws.length, topNumbers, bottomNumbers, topLuckyNumbers, bottomLuckyNumbers };
+}

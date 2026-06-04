@@ -62,6 +62,13 @@ export const appRouter = router({
           const suggestion = await db.suggestEuroMillionKey(input.strategy);
           return suggestion;
         }),
+
+      getStatisticsByPeriod: publicProcedure
+        .input(z.object({ months: z.number().int().positive().default(12) }))
+        .query(async ({ input }) => {
+          const stats = await db.getEuroMillionStatisticsByPeriod(input.months);
+          return stats;
+        }),
     }),
 
     toto: router({
@@ -106,6 +113,13 @@ export const appRouter = router({
         .query(async ({ input }) => {
           const suggestion = await db.suggestTotoKey(input.strategy);
           return suggestion;
+        }),
+
+      getStatisticsByPeriod: publicProcedure
+        .input(z.object({ months: z.number().int().positive().default(12) }))
+        .query(async ({ input }) => {
+          const stats = await db.getTotoStatisticsByPeriod(input.months);
+          return stats;
         }),
     }),
   }),
