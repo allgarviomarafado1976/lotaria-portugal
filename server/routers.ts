@@ -123,6 +123,55 @@ export const appRouter = router({
         }),
     }),
   }),
+
+  favorites: router({
+    add: publicProcedure
+      .input(
+        z.object({
+          gameType: z.enum(["euroMillion", "toto"]),
+          numbers: z.array(z.number().int().positive()),
+          stars: z.array(z.number().int().positive()).optional(),
+          luckyNumber: z.number().int().positive().optional(),
+          name: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user) throw new Error("Not authenticated");
+        const result = await db.addFavorite(
+          ctx.user.id,
+          input.gameType,
+          input.numbers,
+          input.stars,
+          input.luckyNumber,
+          input.name
+        );
+        return result;
+      }),
+
+    list: publicProcedure.query(async ({ ctx }) => {
+      if (!ctx.user) throw new Error("Not authenticated");
+      return await db.getUserFavorites(ctx.user.id);
+    }),
+
+    delete: publicProcedure
+      .input(z.object({ favoriteId: z.number().int().positive() }))
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user) throw new Error("Not authenticated");
+        return await db.deleteFavorite(input.favoriteId);
+      }),
+
+    getAlerts: publicProcedure.query(async ({ ctx }) => {
+      if (!ctx.user) throw new Error("Not authenticated");
+      return await db.getUserAlerts(ctx.user.id);
+    }),
+
+    markAlertAsRead: publicProcedure
+      .input(z.object({ alertId: z.number().int().positive() }))
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user) throw new Error("Not authenticated");
+        return await db.markAlertAsRead(input.alertId);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

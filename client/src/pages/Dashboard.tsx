@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Moon, Sun, LogOut, Target, TrendingUp, History, BarChart3 } from "lucide-react";
 import { FrequencyChart } from "@/components/FrequencyChart";
 import { PeriodFilter } from "@/components/PeriodFilter";
+import { FavoritesManager } from "@/components/FavoritesManager";
+import { AlertsPanel } from "@/components/AlertsPanel";
+import { Star, Bell } from "lucide-react";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -157,7 +160,7 @@ export default function Dashboard() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="statistics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="statistics" className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
               Estatísticas
@@ -169,6 +172,14 @@ export default function Dashboard() {
             <TabsTrigger value="history" className="flex items-center gap-2">
               <History className="w-4 h-4" />
               Histórico
+            </TabsTrigger>
+            <TabsTrigger value="favorites" className="flex items-center gap-2">
+              <Star className="w-4 h-4" />
+              Favoritos
+            </TabsTrigger>
+            <TabsTrigger value="alerts" className="flex items-center gap-2">
+              <Bell className="w-4 h-4" />
+              Alertas
             </TabsTrigger>
           </TabsList>
 
@@ -450,6 +461,16 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Favorites Tab */}
+          <TabsContent value="favorites" className="space-y-6">
+            <FavoritesManager gameType={gameType} />
+          </TabsContent>
+
+          {/* Alerts Tab */}
+          <TabsContent value="alerts" className="space-y-6">
+            <AlertsPanel />
           </TabsContent>
         </Tabs>
       </main>

@@ -68,3 +68,39 @@ export type TotoDraw = typeof totoDraws.$inferSelect;
 export type InsertTotoDraw = typeof totoDraws.$inferInsert;
 
 // TODO: Add your tables here
+
+/**
+ * User favorites table - stores favorite numbers for each user
+ */
+export const userFavorites = mysqlTable("user_favorites", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  gameType: mysqlEnum("gameType", ["euroMillion", "toto"]).notNull(),
+  numbers: text("numbers").notNull(), // JSON array of numbers
+  stars: text("stars"), // JSON array of stars (only for euroMillion)
+  luckyNumber: int("luckyNumber"), // for toto
+  name: varchar("name", { length: 255 }), // optional name for the set
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserFavorite = typeof userFavorites.$inferSelect;
+export type InsertUserFavorite = typeof userFavorites.$inferInsert;
+
+/**
+ * Alerts table - tracks when favorite numbers are drawn
+ */
+export const alerts = mysqlTable("alerts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  favoriteId: int("favoriteId").notNull(),
+  gameType: mysqlEnum("gameType", ["euroMillion", "toto"]).notNull(),
+  drawDate: varchar("drawDate", { length: 10 }).notNull(), // YYYY-MM-DD
+  matchedNumbers: text("matchedNumbers").notNull(), // JSON array of matched numbers
+  matchedStars: text("matchedStars"), // for euroMillion
+  isRead: int("isRead").default(0).notNull(), // 0 or 1
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Alert = typeof alerts.$inferSelect;
+export type InsertAlert = typeof alerts.$inferInsert;

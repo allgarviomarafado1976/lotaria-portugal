@@ -15,6 +15,13 @@
       "when": 1780586614963,
       "tag": "0001_overjoyed_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1780597476781,
+      "tag": "0002_cultured_nextwave",
+      "breakpoints": true
     }
   ]
 }

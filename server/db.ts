@@ -1,6 +1,6 @@
 import { eq, and, inArray, desc, count } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, euroMillionDraws, totoDraws } from "../drizzle/schema";
+import { InsertUser, users, euroMillionDraws, totoDraws, userFavorites, alerts } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -471,4 +471,148 @@ export async function getTotoStatisticsByPeriod(months: number) {
     .slice(0, 5);
 
   return { totalDraws: filteredDraws.length, topNumbers, bottomNumbers, topLuckyNumbers, bottomLuckyNumbers };
+}
+
+
+// ============================================================================
+// Favorites Functions
+// ============================================================================
+
+export async function addFavorite(
+  userId: number,
+  gameType: "euroMillion" | "toto",
+  numbers: number[],
+  stars?: number[],
+  luckyNumber?: number,
+  name?: string
+) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db.insert(userFavorites).values({
+      userId,
+      gameType,
+      numbers: JSON.stringify(numbers),
+      stars: stars ? JSON.stringify(stars) : null,
+      luckyNumber: luckyNumber || null,
+      name: name || null,
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to add favorite:", error);
+    throw error;
+  }
+}
+
+export async function getUserFavorites(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const favorites = await db.select().from(userFavorites).where(eq(userFavorites.userId, userId));
+    return favorites.map((fav) => ({
+      ...fav,
+      numbers: JSON.parse(fav.numbers),
+      stars: fav.stars ? JSON.parse(fav.stars) : undefined,
+    }));
+  } catch (error) {
+    console.error("[Database] Failed to get favorites:", error);
+    return [];
+  }
+}
+
+export async function deleteFavorite(favoriteId: number) {
+  const db = await getDb();
+  if (!db) return false;
+
+  try {
+    await db.delete(userFavorites).where(eq(userFavorites.id, favoriteId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to delete favorite:", error);
+    return false;
+  }
+}
+
+export async function checkFavoritesAgainstDraw(gameType: "euroMillion" | "toto") {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const favorites = await db.select().from(userFavorites).where(eq(userFavorites.gameType, gameType));
+    const latestDraw = gameType === "euroMillion"
+      ? await db.select().from(euroMillionDraws).orderBy(desc(euroMillionDraws.date)).limit(1)
+      : await db.select().from(totoDraws).orderBy(desc(totoDraws.date)).limit(1);
+
+    if (!latestDraw || latestDraw.length === 0) return [];
+
+    const draw = latestDraw[0];
+    const newAlerts = [];
+
+    for (const fav of favorites) {
+      const favNumbers = JSON.parse(fav.numbers);
+      let matchedNumbers: number[] = [];
+      let matchedStars: number[] = [];
+
+      if (gameType === "euroMillion" && "star1" in draw) {
+        const drawnNumbers = [draw.number1, draw.number2, draw.number3, draw.number4, draw.number5];
+        const drawnStars = [draw.star1, draw.star2];
+        const favStars = fav.stars ? JSON.parse(fav.stars) : [];
+
+        matchedNumbers = favNumbers.filter((n: number) => drawnNumbers.includes(n));
+        matchedStars = favStars.filter((s: number) => drawnStars.includes(s));
+      } else if (gameType === "toto" && "luckyNumber" in draw) {
+        const drawnNumbers = [draw.number1, draw.number2, draw.number3, draw.number4, draw.number5, draw.number6];
+        matchedNumbers = favNumbers.filter((n: number) => drawnNumbers.includes(n));
+      }
+
+      if (matchedNumbers.length > 0 || matchedStars.length > 0) {
+        const alertResult = await db.insert(alerts).values({
+          userId: fav.userId,
+          favoriteId: fav.id,
+          gameType,
+          drawDate: draw.date,
+          matchedNumbers: JSON.stringify(matchedNumbers),
+          matchedStars: matchedStars.length > 0 ? JSON.stringify(matchedStars) : null,
+        });
+        newAlerts.push(alertResult);
+      }
+    }
+
+    return newAlerts;
+  } catch (error) {
+    console.error("[Database] Failed to check favorites:", error);
+    return [];
+  }
+}
+
+export async function getUserAlerts(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const userAlerts = await db.select().from(alerts).where(eq(alerts.userId, userId));
+    return userAlerts.map((alert) => ({
+      ...alert,
+      matchedNumbers: JSON.parse(alert.matchedNumbers),
+      matchedStars: alert.matchedStars ? JSON.parse(alert.matchedStars) : undefined,
+    }));
+  } catch (error) {
+    console.error("[Database] Failed to get alerts:", error);
+    return [];
+  }
+}
+
+export async function markAlertAsRead(alertId: number) {
+  const db = await getDb();
+  if (!db) return false;
+
+  try {
+    await db.update(alerts).set({ isRead: 1 }).where(eq(alerts.id, alertId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to mark alert as read:", error);
+    return false;
+  }
 }
