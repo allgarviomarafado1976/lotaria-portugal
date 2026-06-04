@@ -13,6 +13,7 @@ import { FavoritesManager } from "@/components/FavoritesManager";
 import { AlertsPanel } from "@/components/AlertsPanel";
 import { KeyCheckerDisplay } from "@/components/KeyCheckerDisplay";
 import { SuggestionsDisplay } from "@/components/SuggestionsDisplay";
+import { InteractiveKeyChecker } from "@/components/InteractiveKeyChecker";
 import { Star, Bell } from "lucide-react";
 
 export default function Dashboard() {
@@ -286,43 +287,7 @@ export default function Dashboard() {
 
           {/* Checker Tab */}
           <TabsContent value="checker" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Verificador de Chaves</CardTitle>
-                <CardDescription>
-                  {gameType === "euroMillion" 
-                    ? "Insira 5 números e 2 estrelas separados por vírgula (ex: 5,12,25,38,45,2,11)"
-                    : "Insira 6 números e 1 número especial separados por vírgula (ex: 5,12,25,38,42,48,2)"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder={gameType === "euroMillion" 
-                      ? "5,12,25,38,45,2,11"
-                      : "5,12,25,38,42,48,2"}
-                    value={keyInput}
-                    onChange={(e) => setKeyInput(e.target.value)}
-                  />
-                  <Button onClick={handleCheckKey}>
-                    Verificar
-                  </Button>
-                </div>
-
-                {checkResult && (
-                  <KeyCheckerDisplay
-                    gameType={gameType}
-                    numbers={gameType === "euroMillion" 
-                      ? [checkResult.number1, checkResult.number2, checkResult.number3, checkResult.number4, checkResult.number5]
-                      : [checkResult.number1, checkResult.number2, checkResult.number3, checkResult.number4, checkResult.number5, checkResult.number6]}
-                    stars={gameType === "euroMillion" ? [checkResult.star1, checkResult.star2] : undefined}
-                    luckyNumber={gameType === "toto" ? checkResult.luckyNumber : undefined}
-                    wasDrawn={checkResult.wasDrawn}
-                    drawnDate={checkResult.drawnDate}
-                  />
-                )}
-              </CardContent>
-            </Card>
+            <InteractiveKeyChecker gameType={gameType} />
 
             <Card>
               <CardHeader>
