@@ -90,9 +90,12 @@ export default function Home() {
               <Button 
                 size="lg"
                 className="transition-all hover:scale-105 hover:shadow-lg"
+                asChild
               >
-                Começar Agora
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <a href="/dashboard">
+                  Começar Agora
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </a>
               </Button>
               <Button 
                 size="lg" 
