@@ -14,6 +14,7 @@ import { AlertsPanel } from "@/components/AlertsPanel";
 import { KeyCheckerDisplay } from "@/components/KeyCheckerDisplay";
 import { SuggestionsDisplay } from "@/components/SuggestionsDisplay";
 import { InteractiveKeyChecker } from "@/components/InteractiveKeyChecker";
+import { InteractiveSuggestions } from "@/components/InteractiveSuggestions";
 import { Star, Bell } from "lucide-react";
 
 export default function Dashboard() {
@@ -289,50 +290,7 @@ export default function Dashboard() {
           <TabsContent value="checker" className="space-y-6">
             <InteractiveKeyChecker gameType={gameType} />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Sugestões Automáticas</CardTitle>
-                <CardDescription>Gere chaves com base em estratégias diferentes</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Button 
-                    onClick={() => handleSuggestKey("hot")}
-                    variant="outline"
-                    className="h-auto flex-col gap-2 py-4"
-                  >
-                    <span className="font-semibold">🔥 Números Quentes</span>
-                    <span className="text-xs text-muted-foreground">Mais frequentes</span>
-                  </Button>
-                  <Button 
-                    onClick={() => handleSuggestKey("cold")}
-                    variant="outline"
-                    className="h-auto flex-col gap-2 py-4"
-                  >
-                    <span className="font-semibold">❄️ Números Frios</span>
-                    <span className="text-xs text-muted-foreground">Menos frequentes</span>
-                  </Button>
-                  <Button 
-                    onClick={() => handleSuggestKey("balanced")}
-                    variant="outline"
-                    className="h-auto flex-col gap-2 py-4"
-                  >
-                    <span className="font-semibold">⚖️ Equilibrada</span>
-                    <span className="text-xs text-muted-foreground">Combinação</span>
-                  </Button>
-                </div>
-
-                {suggestedKey && (
-                  <SuggestionsDisplay
-                    gameType={gameType}
-                    strategy={suggestedKey.strategy}
-                    numbers={suggestedKey.numbers}
-                    stars={gameType === "euroMillion" ? suggestedKey.stars : undefined}
-                    luckyNumber={gameType === "toto" ? suggestedKey.luckyNumber : undefined}
-                  />
-                )}
-              </CardContent>
-            </Card>
+            <InteractiveSuggestions gameType={gameType} />
           </TabsContent>
 
           {/* History Tab */}
