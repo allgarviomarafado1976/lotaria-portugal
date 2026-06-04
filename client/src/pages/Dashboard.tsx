@@ -11,6 +11,8 @@ import { FrequencyChart } from "@/components/FrequencyChart";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { FavoritesManager } from "@/components/FavoritesManager";
 import { AlertsPanel } from "@/components/AlertsPanel";
+import { KeyCheckerDisplay } from "@/components/KeyCheckerDisplay";
+import { SuggestionsDisplay } from "@/components/SuggestionsDisplay";
 import { Star, Bell } from "lucide-react";
 
 export default function Dashboard() {
@@ -308,21 +310,16 @@ export default function Dashboard() {
                 </div>
 
                 {checkResult && (
-                  <div className={`p-4 rounded-lg border ${
-                    checkResult.wasDrawn 
-                      ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800"
-                      : "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800"
-                  }`}>
-                    <p className={`font-semibold ${
-                      checkResult.wasDrawn 
-                        ? "text-green-900 dark:text-green-100"
-                        : "text-red-900 dark:text-red-100"
-                    }`}>
-                      {checkResult.wasDrawn 
-                        ? `✓ Chave foi sorteada em ${checkResult.drawnDate}`
-                        : "✗ Chave não foi sorteada"}
-                    </p>
-                  </div>
+                  <KeyCheckerDisplay
+                    gameType={gameType}
+                    numbers={gameType === "euroMillion" 
+                      ? [checkResult.number1, checkResult.number2, checkResult.number3, checkResult.number4, checkResult.number5]
+                      : [checkResult.number1, checkResult.number2, checkResult.number3, checkResult.number4, checkResult.number5, checkResult.number6]}
+                    stars={gameType === "euroMillion" ? [checkResult.star1, checkResult.star2] : undefined}
+                    luckyNumber={gameType === "toto" ? checkResult.luckyNumber : undefined}
+                    wasDrawn={checkResult.wasDrawn}
+                    drawnDate={checkResult.drawnDate}
+                  />
                 )}
               </CardContent>
             </Card>
@@ -361,17 +358,13 @@ export default function Dashboard() {
                 </div>
 
                 {suggestedKey && (
-                  <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-                    <p className="text-sm font-semibold text-primary mb-2">Chave Sugerida:</p>
-                    <p className="font-mono text-lg">
-                      {gameType === "euroMillion"
-                        ? `${suggestedKey.numbers.join(", ")} | ${suggestedKey.stars.join(", ")}`
-                        : `${suggestedKey.numbers.join(", ")} | ${suggestedKey.luckyNumber}`}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Estratégia: {suggestedKey.strategy}
-                    </p>
-                  </div>
+                  <SuggestionsDisplay
+                    gameType={gameType}
+                    strategy={suggestedKey.strategy}
+                    numbers={suggestedKey.numbers}
+                    stars={gameType === "euroMillion" ? suggestedKey.stars : undefined}
+                    luckyNumber={gameType === "toto" ? suggestedKey.luckyNumber : undefined}
+                  />
                 )}
               </CardContent>
             </Card>
