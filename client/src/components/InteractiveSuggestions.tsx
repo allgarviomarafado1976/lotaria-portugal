@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { SuggestionsDisplay } from "./SuggestionsDisplay";
 import { Zap, Snowflake, Scale, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 interface InteractiveSuggestionsProps {
   gameType: "euroMillion" | "toto";
@@ -16,7 +16,7 @@ type Strategy = "hot" | "cold" | "balanced";
 export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: InteractiveSuggestionsProps) {
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy>("balanced");
   const [suggestedKey, setSuggestedKey] = useState<any>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [shouldFetch, setShouldFetch] = useState(false);
 
   const strategies: Array<{ id: Strategy; label: string; icon: React.ReactNode; description: string; color: string }> = [
     {
@@ -42,40 +42,46 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
     },
   ];
 
+  // Query para EuroMillion
+  const euroQuery = trpc.lottery.euroMillion.suggestKey.useQuery(
+    { strategy: selectedStrategy },
+    { enabled: false }
+  );
+
+  // Query para Totoloto
+  const totoQuery = trpc.lottery.toto.suggestKey.useQuery(
+    { strategy: selectedStrategy },
+    { enabled: false }
+  );
+
   const handleGenerateSuggestion = async () => {
-    setIsGenerating(true);
     try {
-      const endpoint =
-        gameType === "euroMillion"
-          ? `/api/trpc/lottery.euroMillion.suggestKey?input=${JSON.stringify({ strategy: selectedStrategy })}`
-          : `/api/trpc/lottery.toto.suggestKey?input=${JSON.stringify({ strategy: selectedStrategy })}`;
-
-      const response = await fetch(endpoint, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
-
-      const data = await response.json();
-      
-      if (data.result?.data) {
-        setSuggestedKey(data.result.data);
-        onSuggestionsGenerated?.(data.result.data);
-        toast.success("✨ Sugestão gerada com sucesso!");
+      if (gameType === "euroMillion") {
+        const result = await euroQuery.refetch();
+        if (result.data) {
+          setSuggestedKey(result.data);
+          onSuggestionsGenerated?.(result.data);
+          toast.success("✨ Sugestão gerada com sucesso!");
+        }
       } else {
-        toast.error("Erro ao gerar sugestão");
+        const result = await totoQuery.refetch();
+        if (result.data) {
+          setSuggestedKey(result.data);
+          onSuggestionsGenerated?.(result.data);
+          toast.success("✨ Sugestão gerada com sucesso!");
+        }
       }
     } catch (error) {
       console.error("Erro ao gerar sugestão:", error);
       toast.error("Erro ao gerar sugestão");
-    } finally {
-      setIsGenerating(false);
     }
   };
 
   const handleClearSuggestion = () => {
     setSuggestedKey(null);
   };
+
+  const isGenerating = euroQuery.isFetching || totoQuery.isFetching;
 
   return (
     <div className="space-y-6">
