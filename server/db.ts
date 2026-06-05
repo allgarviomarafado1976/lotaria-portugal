@@ -190,16 +190,20 @@ export async function getEuroMillionStatistics() {
 
 export async function suggestEuroMillionKey(strategy: "hot" | "cold" | "balanced") {
   const db = await getDb();
-  if (!db) {
-    return { numbers: [], stars: [], strategy };
-  }
-
+  
   const stats = await getEuroMillionStatistics();
-
   let suggestedNumbers: number[] = [];
   let suggestedStars: number[] = [];
 
-  if (strategy === "hot") {
+  // If no data, generate random suggestions
+  if (stats.totalDraws === 0) {
+    const allNumbers = Array.from({ length: 50 }, (_, i) => i + 1);
+    const allStars = Array.from({ length: 12 }, (_, i) => i + 1);
+    
+    // Shuffle and pick 5 random numbers
+    suggestedNumbers = allNumbers.sort(() => Math.random() - 0.5).slice(0, 5).sort((a, b) => a - b);
+    suggestedStars = allStars.sort(() => Math.random() - 0.5).slice(0, 2).sort((a, b) => a - b);
+  } else if (strategy === "hot") {
     suggestedNumbers = stats.topNumbers.slice(0, 5).map((n) => n.number);
     suggestedStars = stats.topStars.slice(0, 2).map((s) => s.number);
   } else if (strategy === "cold") {
@@ -321,16 +325,20 @@ export async function getTotoStatistics() {
 
 export async function suggestTotoKey(strategy: "hot" | "cold" | "balanced") {
   const db = await getDb();
-  if (!db) {
-    return { numbers: [], luckyNumber: 0, strategy };
-  }
-
+  
   const stats = await getTotoStatistics();
-
   let suggestedNumbers: number[] = [];
   let suggestedLucky: number = 0;
 
-  if (strategy === "hot") {
+  // If no data, generate random suggestions
+  if (stats.totalDraws === 0) {
+    const allNumbers = Array.from({ length: 49 }, (_, i) => i + 1);
+    const allLucky = Array.from({ length: 13 }, (_, i) => i + 1);
+    
+    // Shuffle and pick 6 random numbers
+    suggestedNumbers = allNumbers.sort(() => Math.random() - 0.5).slice(0, 6).sort((a, b) => a - b);
+    suggestedLucky = allLucky[Math.floor(Math.random() * allLucky.length)];
+  } else if (strategy === "hot") {
     suggestedNumbers = stats.topNumbers.slice(0, 6).map((n) => n.number);
     suggestedLucky = stats.topLuckyNumbers[0]?.number || 1;
   } else if (strategy === "cold") {
