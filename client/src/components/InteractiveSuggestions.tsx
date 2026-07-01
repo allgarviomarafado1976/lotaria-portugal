@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SuggestionsDisplay } from "./SuggestionsDisplay";
+import { EnhancedSuggestionsDisplay } from "./EnhancedSuggestionsDisplay";
 import { Zap, Snowflake, Scale, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -42,117 +42,161 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
     },
   ];
 
-  // Query para EuroMillion
-  const euroQuery = trpc.lottery.euroMillion.suggestKey.useQuery(
+  // Queries para EuroMillion
+  const euroSuggestQuery = trpc.lottery.euroMillion.suggestKey.useQuery(
     { strategy: selectedStrategy },
-    { enabled: false }
+    { enabled: shouldFetch && gameType === "euroMillion" }
   );
 
-  // Query para Totoloto
-  const totoQuery = trpc.lottery.toto.suggestKey.useQuery(
+  const euroAnalysisQuery = trpc.lottery.euroMillion.getNumberAnalysis.useQuery(
+    undefined,
+    { enabled: shouldFetch && gameType === "euroMillion" }
+  );
+
+  const euroStarAnalysisQuery = trpc.lottery.euroMillion.getStarAnalysis.useQuery(
+    undefined,
+    { enabled: shouldFetch && gameType === "euroMillion" }
+  );
+
+  // Queries para Totoloto
+  const totoSuggestQuery = trpc.lottery.toto.suggestKey.useQuery(
     { strategy: selectedStrategy },
-    { enabled: false }
+    { enabled: shouldFetch && gameType === "toto" }
+  );
+
+  const totoAnalysisQuery = trpc.lottery.toto.getNumberAnalysis.useQuery(
+    undefined,
+    { enabled: shouldFetch && gameType === "toto" }
+  );
+
+  const totoLuckyAnalysisQuery = trpc.lottery.toto.getLuckyNumberAnalysis.useQuery(
+    undefined,
+    { enabled: shouldFetch && gameType === "toto" }
   );
 
   const handleGenerateSuggestion = async () => {
-    try {
-      if (gameType === "euroMillion") {
-        const result = await euroQuery.refetch();
-        if (result.data) {
-          setSuggestedKey(result.data);
-          onSuggestionsGenerated?.(result.data);
-          toast.success("✨ Sugestão gerada com sucesso!");
-        }
-      } else {
-        const result = await totoQuery.refetch();
-        if (result.data) {
-          setSuggestedKey(result.data);
-          onSuggestionsGenerated?.(result.data);
-          toast.success("✨ Sugestão gerada com sucesso!");
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao gerar sugestão:", error);
-      toast.error("Erro ao gerar sugestão");
-    }
-  };
-
-  const handleClearSuggestion = () => {
+    setShouldFetch(true);
     setSuggestedKey(null);
   };
 
-  const isGenerating = euroQuery.isFetching || totoQuery.isFetching;
+  // Atualizar suggestedKey quando os dados chegarem
+  if (gameType === "euroMillion" && euroSuggestQuery.data && !suggestedKey) {
+    setSuggestedKey(euroSuggestQuery.data);
+    setShouldFetch(false);
+    if (onSuggestionsGenerated) {
+      onSuggestionsGenerated(euroSuggestQuery.data);
+    }
+  }
+
+  if (gameType === "toto" && totoSuggestQuery.data && !suggestedKey) {
+    setSuggestedKey(totoSuggestQuery.data);
+    setShouldFetch(false);
+    if (onSuggestionsGenerated) {
+      onSuggestionsGenerated(totoSuggestQuery.data);
+    }
+  }
+
+  const handleClear = () => {
+    setSuggestedKey(null);
+    setShouldFetch(false);
+  };
+
+  const isLoading = gameType === "euroMillion" 
+    ? euroSuggestQuery.isLoading || euroAnalysisQuery.isLoading || euroStarAnalysisQuery.isLoading
+    : totoSuggestQuery.isLoading || totoAnalysisQuery.isLoading || totoLuckyAnalysisQuery.isLoading;
 
   return (
     <div className="space-y-6">
-      {/* Strategy Selection */}
-      <Card className="border-2 border-slate-700 dark:border-slate-600">
+      {/* Seletor de Estratégia */}
+      <Card className="border-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-cyan-500" />
+            <Sparkles className="w-5 h-5" />
             Estratégia de Sugestão
           </CardTitle>
-          <CardDescription>Escolha como deseja gerar a próxima chave</CardDescription>
+          <CardDescription>
+            Mistura de números quentes, frios e equilibrados
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Strategy Buttons */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {strategies.map((strategy) => (
               <button
                 key={strategy.id}
                 onClick={() => setSelectedStrategy(strategy.id)}
-                className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                className={`p-4 rounded-lg border-2 transition-all ${
                   selectedStrategy === strategy.id
-                    ? `${strategy.color} text-white border-white shadow-lg scale-105`
-                    : "bg-slate-700 dark:bg-slate-600 text-slate-100 border-slate-600 dark:border-slate-500 hover:border-slate-500"
+                    ? `${strategy.color} text-white border-transparent`
+                    : "border-gray-300 dark:border-gray-600 hover:border-gray-400"
                 }`}
               >
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-2">
                   {strategy.icon}
                   <span className="font-semibold">{strategy.label}</span>
                 </div>
-                <p className="text-xs opacity-90">{strategy.description}</p>
+                <p className="text-sm opacity-90">{strategy.description}</p>
               </button>
             ))}
           </div>
 
-          {/* Generate Button */}
           <Button
             onClick={handleGenerateSuggestion}
-            disabled={isGenerating}
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3"
             size="lg"
-            className="w-full bg-cyan-500 hover:bg-cyan-600 dark:bg-cyan-600 dark:hover:bg-cyan-700 text-white font-semibold"
           >
-            <Sparkles className="w-4 h-4 mr-2" />
-            {isGenerating ? "Gerando..." : "Gerar Sugestão"}
+            {isLoading ? (
+              <>
+                <span className="animate-spin mr-2">⚙️</span>
+                Gerando Sugestão...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5 mr-2" />
+                Gerar Sugestão
+              </>
+            )}
           </Button>
         </CardContent>
       </Card>
 
-      {/* Result Display */}
+      {/* Resultado com Análise Detalhada */}
       {suggestedKey && (
         <div className="space-y-4">
-          <SuggestionsDisplay
-            gameType={gameType}
-            strategy={suggestedKey.strategy}
-            numbers={suggestedKey.numbers}
-            stars={gameType === "euroMillion" ? suggestedKey.stars : undefined}
-            luckyNumber={gameType === "toto" ? suggestedKey.luckyNumber : undefined}
-          />
+          {gameType === "euroMillion" && euroAnalysisQuery.data && euroStarAnalysisQuery.data && (
+            <EnhancedSuggestionsDisplay
+              gameType="euroMillion"
+              suggestedNumbers={suggestedKey.suggestedNumbers || []}
+              suggestedStars={suggestedKey.suggestedStars || []}
+              strategy={selectedStrategy}
+              numberAnalysis={euroAnalysisQuery.data}
+              starAnalysis={euroStarAnalysisQuery.data}
+            />
+          )}
 
-          {/* Action Buttons */}
-          <div className="flex gap-2">
+          {gameType === "toto" && totoAnalysisQuery.data && totoLuckyAnalysisQuery.data && (
+            <EnhancedSuggestionsDisplay
+              gameType="totoloto"
+              suggestedNumbers={suggestedKey.suggestedNumbers || []}
+              luckyNumber={suggestedKey.suggestedLucky}
+              strategy={selectedStrategy}
+              numberAnalysis={totoAnalysisQuery.data}
+              starAnalysis={totoLuckyAnalysisQuery.data}
+            />
+          )}
+
+          {/* Botões de Ação */}
+          <div className="flex gap-3">
             <Button
               onClick={handleGenerateSuggestion}
-              disabled={isGenerating}
               variant="outline"
               className="flex-1"
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              {isGenerating ? "Gerando..." : "Gerar Outra"}
+              Gerar Outra
             </Button>
             <Button
-              onClick={handleClearSuggestion}
+              onClick={handleClear}
               variant="ghost"
               className="flex-1"
             >

@@ -69,6 +69,16 @@ export const appRouter = router({
           const stats = await db.getEuroMillionStatisticsByPeriod(input.months);
           return stats;
         }),
+
+      getNumberAnalysis: publicProcedure.query(async () => {
+        const analysis = await db.getEuroMillionNumberAnalysis();
+        return analysis;
+      }),
+
+      getStarAnalysis: publicProcedure.query(async () => {
+        const analysis = await db.getEuroMillionStarAnalysis();
+        return analysis;
+      }),
     }),
 
     toto: router({
@@ -121,6 +131,16 @@ export const appRouter = router({
           const stats = await db.getTotoStatisticsByPeriod(input.months);
           return stats;
         }),
+
+      getNumberAnalysis: publicProcedure.query(async () => {
+        const analysis = await db.getTotoNumberAnalysis();
+        return analysis;
+      }),
+
+      getLuckyNumberAnalysis: publicProcedure.query(async () => {
+        const analysis = await db.getTotoLuckyNumberAnalysis();
+        return analysis;
+      }),
     }),
   }),
 

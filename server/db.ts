@@ -712,3 +712,219 @@ export async function importTotolotoDraws() {
     throw error;
   }
 }
+
+
+// ============================================================================
+// Detailed Analysis Functions
+// ============================================================================
+
+export async function getEuroMillionNumberAnalysis() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const draws = await db.select().from(euroMillionDraws);
+    const totalDraws = draws.length;
+
+    if (totalDraws === 0) {
+      // Return default analysis for all numbers
+      return Array.from({ length: 50 }, (_, i) => ({
+        number: i + 1,
+        frequency: 0,
+        probability: 0.1,
+        trend: "neutral" as const,
+      }));
+    }
+
+    const numberFreq: Record<number, number> = {};
+
+    // Count frequency
+    draws.forEach((draw) => {
+      [draw.number1, draw.number2, draw.number3, draw.number4, draw.number5].forEach((num) => {
+        numberFreq[num] = (numberFreq[num] || 0) + 1;
+      });
+    });
+
+    // Calculate mean frequency
+    const meanFrequency = Object.values(numberFreq).reduce((a, b) => a + b, 0) / 50;
+    const stdDev = Math.sqrt(
+      Object.values(numberFreq).reduce((sum, freq) => sum + Math.pow(freq - meanFrequency, 2), 0) / 50
+    );
+
+    // Build analysis for all numbers
+    const analysis = Array.from({ length: 50 }, (_, i) => {
+      const number = i + 1;
+      const frequency = numberFreq[number] || 0;
+      const probability = frequency / totalDraws;
+
+      // Determine trend
+      let trend: "hot" | "cold" | "neutral" = "neutral";
+      if (frequency > meanFrequency + stdDev) {
+        trend = "hot";
+      } else if (frequency < meanFrequency - stdDev) {
+        trend = "cold";
+      }
+
+      return { number, frequency, probability, trend };
+    });
+
+    return analysis;
+  } catch (error) {
+    console.error("[Database] Failed to get number analysis:", error);
+    return [];
+  }
+}
+
+export async function getEuroMillionStarAnalysis() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const draws = await db.select().from(euroMillionDraws);
+    const totalDraws = draws.length;
+
+    if (totalDraws === 0) {
+      return Array.from({ length: 12 }, (_, i) => ({
+        number: i + 1,
+        frequency: 0,
+        probability: 0.083,
+        trend: "neutral" as const,
+      }));
+    }
+
+    const starFreq: Record<number, number> = {};
+
+    draws.forEach((draw) => {
+      [draw.star1, draw.star2].forEach((star) => {
+        starFreq[star] = (starFreq[star] || 0) + 1;
+      });
+    });
+
+    const meanFrequency = Object.values(starFreq).reduce((a, b) => a + b, 0) / 12;
+    const stdDev = Math.sqrt(
+      Object.values(starFreq).reduce((sum, freq) => sum + Math.pow(freq - meanFrequency, 2), 0) / 12
+    );
+
+    const analysis = Array.from({ length: 12 }, (_, i) => {
+      const number = i + 1;
+      const frequency = starFreq[number] || 0;
+      const probability = frequency / (totalDraws * 2); // 2 stars per draw
+
+      let trend: "hot" | "cold" | "neutral" = "neutral";
+      if (frequency > meanFrequency + stdDev) {
+        trend = "hot";
+      } else if (frequency < meanFrequency - stdDev) {
+        trend = "cold";
+      }
+
+      return { number, frequency, probability, trend };
+    });
+
+    return analysis;
+  } catch (error) {
+    console.error("[Database] Failed to get star analysis:", error);
+    return [];
+  }
+}
+
+export async function getTotoNumberAnalysis() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const draws = await db.select().from(totoDraws);
+    const totalDraws = draws.length;
+
+    if (totalDraws === 0) {
+      return Array.from({ length: 49 }, (_, i) => ({
+        number: i + 1,
+        frequency: 0,
+        probability: 0.02,
+        trend: "neutral" as const,
+      }));
+    }
+
+    const numberFreq: Record<number, number> = {};
+
+    draws.forEach((draw) => {
+      [draw.number1, draw.number2, draw.number3, draw.number4, draw.number5, draw.number6].forEach((num) => {
+        numberFreq[num] = (numberFreq[num] || 0) + 1;
+      });
+    });
+
+    const meanFrequency = Object.values(numberFreq).reduce((a, b) => a + b, 0) / 49;
+    const stdDev = Math.sqrt(
+      Object.values(numberFreq).reduce((sum, freq) => sum + Math.pow(freq - meanFrequency, 2), 0) / 49
+    );
+
+    const analysis = Array.from({ length: 49 }, (_, i) => {
+      const number = i + 1;
+      const frequency = numberFreq[number] || 0;
+      const probability = frequency / totalDraws;
+
+      let trend: "hot" | "cold" | "neutral" = "neutral";
+      if (frequency > meanFrequency + stdDev) {
+        trend = "hot";
+      } else if (frequency < meanFrequency - stdDev) {
+        trend = "cold";
+      }
+
+      return { number, frequency, probability, trend };
+    });
+
+    return analysis;
+  } catch (error) {
+    console.error("[Database] Failed to get number analysis:", error);
+    return [];
+  }
+}
+
+export async function getTotoLuckyNumberAnalysis() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const draws = await db.select().from(totoDraws);
+    const totalDraws = draws.length;
+
+    if (totalDraws === 0) {
+      return Array.from({ length: 13 }, (_, i) => ({
+        number: i + 1,
+        frequency: 0,
+        probability: 0.077,
+        trend: "neutral" as const,
+      }));
+    }
+
+    const luckyFreq: Record<number, number> = {};
+
+    draws.forEach((draw) => {
+      luckyFreq[draw.luckyNumber] = (luckyFreq[draw.luckyNumber] || 0) + 1;
+    });
+
+    const meanFrequency = Object.values(luckyFreq).reduce((a, b) => a + b, 0) / 13;
+    const stdDev = Math.sqrt(
+      Object.values(luckyFreq).reduce((sum, freq) => sum + Math.pow(freq - meanFrequency, 2), 0) / 13
+    );
+
+    const analysis = Array.from({ length: 13 }, (_, i) => {
+      const number = i + 1;
+      const frequency = luckyFreq[number] || 0;
+      const probability = frequency / totalDraws;
+
+      let trend: "hot" | "cold" | "neutral" = "neutral";
+      if (frequency > meanFrequency + stdDev) {
+        trend = "hot";
+      } else if (frequency < meanFrequency - stdDev) {
+        trend = "cold";
+      }
+
+      return { number, frequency, probability, trend };
+    });
+
+    return analysis;
+  } catch (error) {
+    console.error("[Database] Failed to get lucky number analysis:", error);
+    return [];
+  }
+}
