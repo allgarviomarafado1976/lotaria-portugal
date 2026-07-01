@@ -172,6 +172,38 @@ export const appRouter = router({
         return await db.markAlertAsRead(input.alertId);
       }),
   }),
+
+  admin: router({
+    importDraws: publicProcedure
+      .input(
+        z.object({
+          game: z.enum(["euroMillion", "totoloto"]),
+        })
+      )
+      .mutation(async ({ input }) => {
+        try {
+          if (input.game === "euroMillion") {
+            await db.importEuroMillionDraws();
+            return { success: true, message: "EuroMilhões importado com sucesso" };
+          } else {
+            await db.importTotolotoDraws();
+            return { success: true, message: "Totoloto importado com sucesso" };
+          }
+        } catch (error) {
+          return { success: false, message: error instanceof Error ? error.message : "Erro na importação" };
+        }
+      }),
+
+    getImportStatus: publicProcedure.query(async () => {
+      const euroCount = await db.getEuroMillionDrawsCount();
+      const totoCount = await db.getTotoDrawsCount();
+      return {
+        euroMillion: euroCount,
+        totoloto: totoCount,
+        lastUpdated: new Date(),
+      };
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

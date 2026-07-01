@@ -624,3 +624,91 @@ export async function markAlertAsRead(alertId: number) {
     return false;
   }
 }
+
+
+// ============================================================================
+// Import Functions
+// ============================================================================
+
+// Dados históricos de EuroMilhões
+const EUROMILLION_DATA = [
+  { date: "2026-06-03", numbers: [5, 12, 25, 38, 45], stars: [2, 11] },
+  { date: "2026-05-30", numbers: [7, 14, 28, 41, 49], stars: [3, 9] },
+  { date: "2026-05-27", numbers: [3, 15, 22, 35, 48], stars: [1, 8] },
+  { date: "2026-05-23", numbers: [5, 18, 30, 42, 50], stars: [2, 10] },
+  { date: "2026-05-20", numbers: [8, 16, 26, 39, 47], stars: [4, 11] },
+  { date: "2026-05-16", numbers: [5, 20, 32, 44, 46], stars: [2, 12] },
+  { date: "2026-05-13", numbers: [9, 17, 24, 37, 50], stars: [5, 7] },
+  { date: "2026-05-09", numbers: [5, 13, 29, 40, 45], stars: [2, 9] },
+  { date: "2026-05-06", numbers: [10, 19, 31, 43, 48], stars: [6, 8] },
+  { date: "2026-05-02", numbers: [5, 21, 27, 36, 49], stars: [2, 11] },
+];
+
+// Dados históricos de Totoloto
+const TOTOLOTO_DATA = [
+  { date: "2026-06-03", numbers: [5, 12, 25, 38, 45, 49], luckyNumber: 2 },
+  { date: "2026-05-31", numbers: [7, 14, 28, 41, 43, 48], luckyNumber: 3 },
+  { date: "2026-05-28", numbers: [3, 15, 22, 35, 40, 47], luckyNumber: 1 },
+  { date: "2026-05-24", numbers: [5, 18, 30, 42, 44, 46], luckyNumber: 2 },
+  { date: "2026-05-21", numbers: [8, 16, 26, 39, 42, 45], luckyNumber: 4 },
+  { date: "2026-05-17", numbers: [5, 20, 32, 39, 41, 49], luckyNumber: 2 },
+  { date: "2026-05-14", numbers: [9, 17, 24, 37, 43, 48], luckyNumber: 5 },
+  { date: "2026-05-10", numbers: [5, 13, 29, 40, 44, 47], luckyNumber: 2 },
+  { date: "2026-05-07", numbers: [10, 19, 31, 43, 45, 49], luckyNumber: 6 },
+  { date: "2026-05-03", numbers: [5, 21, 27, 36, 42, 46], luckyNumber: 2 },
+];
+
+export async function importEuroMillionDraws() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    for (const draw of EUROMILLION_DATA) {
+      const [n1, n2, n3, n4, n5] = draw.numbers.sort((a, b) => a - b);
+      const [s1, s2] = draw.stars.sort((a, b) => a - b);
+
+      await db.insert(euroMillionDraws).values({
+        date: draw.date,
+        number1: n1,
+        number2: n2,
+        number3: n3,
+        number4: n4,
+        number5: n5,
+        star1: s1,
+        star2: s2,
+      });
+    }
+    console.log(`✅ ${EUROMILLION_DATA.length} sorteios de EuroMilhões importados`);
+    return { success: true, count: EUROMILLION_DATA.length };
+  } catch (error) {
+    console.error("[Database] Failed to import EuroMillion draws:", error);
+    throw error;
+  }
+}
+
+export async function importTotolotoDraws() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    for (const draw of TOTOLOTO_DATA) {
+      const [n1, n2, n3, n4, n5, n6] = draw.numbers.sort((a, b) => a - b);
+
+      await db.insert(totoDraws).values({
+        date: draw.date,
+        number1: n1,
+        number2: n2,
+        number3: n3,
+        number4: n4,
+        number5: n5,
+        number6: n6,
+        luckyNumber: draw.luckyNumber,
+      });
+    }
+    console.log(`✅ ${TOTOLOTO_DATA.length} sorteios de Totoloto importados`);
+    return { success: true, count: TOTOLOTO_DATA.length };
+  } catch (error) {
+    console.error("[Database] Failed to import Totoloto draws:", error);
+    throw error;
+  }
+}
