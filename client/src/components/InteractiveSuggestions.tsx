@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EnhancedSuggestionsDisplay } from "./EnhancedSuggestionsDisplay";
@@ -16,7 +16,7 @@ type Strategy = "hot" | "cold" | "balanced";
 export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: InteractiveSuggestionsProps) {
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy>("balanced");
   const [suggestedKey, setSuggestedKey] = useState<any>(null);
-  const [shouldFetch, setShouldFetch] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const strategies: Array<{ id: Strategy; label: string; icon: React.ReactNode; description: string; color: string }> = [
     {
@@ -45,65 +45,85 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
   // Queries para EuroMillion
   const euroSuggestQuery = trpc.lottery.euroMillion.suggestKey.useQuery(
     { strategy: selectedStrategy },
-    { enabled: shouldFetch && gameType === "euroMillion" }
+    { enabled: false }
   );
 
   const euroAnalysisQuery = trpc.lottery.euroMillion.getNumberAnalysis.useQuery(
     undefined,
-    { enabled: shouldFetch && gameType === "euroMillion" }
+    { enabled: false }
   );
 
   const euroStarAnalysisQuery = trpc.lottery.euroMillion.getStarAnalysis.useQuery(
     undefined,
-    { enabled: shouldFetch && gameType === "euroMillion" }
+    { enabled: false }
   );
 
   // Queries para Totoloto
   const totoSuggestQuery = trpc.lottery.toto.suggestKey.useQuery(
     { strategy: selectedStrategy },
-    { enabled: shouldFetch && gameType === "toto" }
+    { enabled: false }
   );
 
   const totoAnalysisQuery = trpc.lottery.toto.getNumberAnalysis.useQuery(
     undefined,
-    { enabled: shouldFetch && gameType === "toto" }
+    { enabled: false }
   );
 
   const totoLuckyAnalysisQuery = trpc.lottery.toto.getLuckyNumberAnalysis.useQuery(
     undefined,
-    { enabled: shouldFetch && gameType === "toto" }
+    { enabled: false }
   );
 
+  // Efeito para atualizar quando as queries completam
+  useEffect(() => {
+    if (gameType === "euroMillion" && euroSuggestQuery.data && euroAnalysisQuery.data && euroStarAnalysisQuery.data) {
+      setSuggestedKey(euroSuggestQuery.data);
+      setIsGenerating(false);
+      if (onSuggestionsGenerated) {
+        onSuggestionsGenerated(euroSuggestQuery.data);
+      }
+      toast.success("Sugestão gerada com sucesso!");
+    }
+  }, [euroSuggestQuery.data, euroAnalysisQuery.data, euroStarAnalysisQuery.data, gameType, onSuggestionsGenerated]);
+
+  useEffect(() => {
+    if (gameType === "toto" && totoSuggestQuery.data && totoAnalysisQuery.data && totoLuckyAnalysisQuery.data) {
+      setSuggestedKey(totoSuggestQuery.data);
+      setIsGenerating(false);
+      if (onSuggestionsGenerated) {
+        onSuggestionsGenerated(totoSuggestQuery.data);
+      }
+      toast.success("Sugestão gerada com sucesso!");
+    }
+  }, [totoSuggestQuery.data, totoAnalysisQuery.data, totoLuckyAnalysisQuery.data, gameType, onSuggestionsGenerated]);
+
   const handleGenerateSuggestion = async () => {
-    setShouldFetch(true);
+    setIsGenerating(true);
     setSuggestedKey(null);
+
+    if (gameType === "euroMillion") {
+      await Promise.all([
+        euroSuggestQuery.refetch(),
+        euroAnalysisQuery.refetch(),
+        euroStarAnalysisQuery.refetch(),
+      ]);
+    } else {
+      await Promise.all([
+        totoSuggestQuery.refetch(),
+        totoAnalysisQuery.refetch(),
+        totoLuckyAnalysisQuery.refetch(),
+      ]);
+    }
   };
-
-  // Atualizar suggestedKey quando os dados chegarem
-  if (gameType === "euroMillion" && euroSuggestQuery.data && !suggestedKey) {
-    setSuggestedKey(euroSuggestQuery.data);
-    setShouldFetch(false);
-    if (onSuggestionsGenerated) {
-      onSuggestionsGenerated(euroSuggestQuery.data);
-    }
-  }
-
-  if (gameType === "toto" && totoSuggestQuery.data && !suggestedKey) {
-    setSuggestedKey(totoSuggestQuery.data);
-    setShouldFetch(false);
-    if (onSuggestionsGenerated) {
-      onSuggestionsGenerated(totoSuggestQuery.data);
-    }
-  }
 
   const handleClear = () => {
     setSuggestedKey(null);
-    setShouldFetch(false);
+    setIsGenerating(false);
   };
 
   const isLoading = gameType === "euroMillion" 
-    ? euroSuggestQuery.isLoading || euroAnalysisQuery.isLoading || euroStarAnalysisQuery.isLoading
-    : totoSuggestQuery.isLoading || totoAnalysisQuery.isLoading || totoLuckyAnalysisQuery.isLoading;
+    ? isGenerating || euroSuggestQuery.isLoading || euroAnalysisQuery.isLoading || euroStarAnalysisQuery.isLoading
+    : isGenerating || totoSuggestQuery.isLoading || totoAnalysisQuery.isLoading || totoLuckyAnalysisQuery.isLoading;
 
   return (
     <div className="space-y-6">
@@ -123,7 +143,10 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
             {strategies.map((strategy) => (
               <button
                 key={strategy.id}
-                onClick={() => setSelectedStrategy(strategy.id)}
+                onClick={() => {
+                  setSelectedStrategy(strategy.id);
+                  setSuggestedKey(null);
+                }}
                 className={`p-4 rounded-lg border-2 transition-all ${
                   selectedStrategy === strategy.id
                     ? `${strategy.color} text-white border-transparent`
@@ -166,8 +189,8 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
           {gameType === "euroMillion" && euroAnalysisQuery.data && euroStarAnalysisQuery.data && (
             <EnhancedSuggestionsDisplay
               gameType="euroMillion"
-              suggestedNumbers={suggestedKey.suggestedNumbers || []}
-              suggestedStars={suggestedKey.suggestedStars || []}
+              suggestedNumbers={suggestedKey.numbers || []}
+              suggestedStars={suggestedKey.stars || []}
               strategy={selectedStrategy}
               numberAnalysis={euroAnalysisQuery.data}
               starAnalysis={euroStarAnalysisQuery.data}
@@ -177,8 +200,8 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
           {gameType === "toto" && totoAnalysisQuery.data && totoLuckyAnalysisQuery.data && (
             <EnhancedSuggestionsDisplay
               gameType="totoloto"
-              suggestedNumbers={suggestedKey.suggestedNumbers || []}
-              luckyNumber={suggestedKey.suggestedLucky}
+              suggestedNumbers={suggestedKey.numbers || []}
+              luckyNumber={suggestedKey.luckyNumber}
               strategy={selectedStrategy}
               numberAnalysis={totoAnalysisQuery.data}
               starAnalysis={totoLuckyAnalysisQuery.data}
@@ -189,6 +212,7 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
           <div className="flex gap-3">
             <Button
               onClick={handleGenerateSuggestion}
+              disabled={isLoading}
               variant="outline"
               className="flex-1"
             >
