@@ -1,6 +1,6 @@
 import { eq, and, inArray, desc, count } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, euroMillionDraws, totoDraws, userFavorites, alerts } from "../drizzle/schema";
+import { InsertUser, users, euroMillionDraws, totoDraws, userFavorites, alerts, suggestionHistory, hitAnalysis, SuggestionHistory, InsertSuggestionHistory, HitAnalysis, InsertHitAnalysis } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -925,6 +925,269 @@ export async function getTotoLuckyNumberAnalysis() {
     return analysis;
   } catch (error) {
     console.error("[Database] Failed to get lucky number analysis:", error);
+    return [];
+  }
+}
+
+
+// ============================================================================
+// Suggestion History & Hit Analysis Functions
+// ============================================================================
+
+export async function addSuggestionHistory(
+  userId: number,
+  gameType: "euroMillion" | "toto",
+  strategy: "hot" | "cold" | "balanced",
+  numbers: number[],
+  stars?: number[],
+  luckyNumber?: number
+) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db.insert(suggestionHistory).values({
+      userId,
+      gameType,
+      strategy,
+      numbers: JSON.stringify(numbers),
+      stars: stars ? JSON.stringify(stars) : null,
+      luckyNumber: luckyNumber || null,
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to add suggestion history:", error);
+    throw error;
+  }
+}
+
+export async function getUserSuggestionHistory(userId: number, gameType?: "euroMillion" | "toto") {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    let query = db.select().from(suggestionHistory).where(eq(suggestionHistory.userId, userId));
+    
+    if (gameType) {
+      query = db.select().from(suggestionHistory).where(
+        and(eq(suggestionHistory.userId, userId), eq(suggestionHistory.gameType, gameType))
+      );
+    }
+    
+    const history = await query.orderBy(desc(suggestionHistory.generatedAt));
+    return history.map((item) => ({
+      ...item,
+      numbers: JSON.parse(item.numbers),
+      stars: item.stars ? JSON.parse(item.stars) : undefined,
+    }));
+  } catch (error) {
+    console.error("[Database] Failed to get suggestion history:", error);
+    return [];
+  }
+}
+
+export async function updateSuggestionHit(
+  suggestionId: number,
+  drawDate: string,
+  matchedNumbers: number,
+  matchedStars?: number,
+  matchedLucky?: number
+) {
+  const db = await getDb();
+  if (!db) return false;
+
+  try {
+    const isHit = matchedNumbers > 0 || (matchedStars && matchedStars > 0) || (matchedLucky && matchedLucky > 0) ? 1 : 0;
+    
+    await db.update(suggestionHistory)
+      .set({
+        drawDate,
+        matchedNumbers,
+        matchedStars: matchedStars || 0,
+        matchedLucky: matchedLucky || 0,
+        isHit,
+        hitType: isHit ? "partial" : "none",
+        updatedAt: new Date(),
+      })
+      .where(eq(suggestionHistory.id, suggestionId));
+    
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to update suggestion hit:", error);
+    return false;
+  }
+}
+
+export async function getHitAnalysis(
+  userId: number,
+  gameType: "euroMillion" | "toto",
+  strategy: "hot" | "cold" | "balanced"
+) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db.select().from(hitAnalysis).where(
+      and(
+        eq(hitAnalysis.userId, userId),
+        eq(hitAnalysis.gameType, gameType),
+        eq(hitAnalysis.strategy, strategy)
+      )
+    ).limit(1);
+
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to get hit analysis:", error);
+    return null;
+  }
+}
+
+export async function updateHitAnalysis(
+  userId: number,
+  gameType: "euroMillion" | "toto",
+  strategy: "hot" | "cold" | "balanced"
+) {
+  const db = await getDb();
+  if (!db) return false;
+
+  try {
+    // Get all suggestions for this user/game/strategy
+    const suggestions = await db.select().from(suggestionHistory).where(
+      and(
+        eq(suggestionHistory.userId, userId),
+        eq(suggestionHistory.gameType, gameType),
+        eq(suggestionHistory.strategy, strategy)
+      )
+    );
+
+    const totalSuggestions = suggestions.length;
+    const totalHits = suggestions.filter((s) => s.isHit === 1).length;
+    const accuracyRate = totalSuggestions > 0 ? `${Math.round((totalHits / totalSuggestions) * 100)}%` : "0%";
+    
+    // Calculate averages
+    const totalMatchedNumbers = suggestions.reduce((sum, s) => sum + (s.matchedNumbers || 0), 0);
+    const avgMatchedNumbers = totalSuggestions > 0 ? (totalMatchedNumbers / totalSuggestions).toFixed(2) : "0";
+    
+    const totalMatchedStars = suggestions.reduce((sum, s) => sum + (s.matchedStars || 0), 0);
+    const avgMatchedStars = totalSuggestions > 0 ? (totalMatchedStars / totalSuggestions).toFixed(2) : "0";
+
+    // Check if analysis exists
+    const existing = await db.select().from(hitAnalysis).where(
+      and(
+        eq(hitAnalysis.userId, userId),
+        eq(hitAnalysis.gameType, gameType),
+        eq(hitAnalysis.strategy, strategy)
+      )
+    ).limit(1);
+
+    if (existing.length > 0) {
+      // Update existing
+      await db.update(hitAnalysis)
+        .set({
+          totalSuggestions,
+          totalHits,
+          accuracyRate,
+          avgMatchedNumbers,
+          avgMatchedStars: gameType === "euroMillion" ? avgMatchedStars : undefined,
+          lastUpdated: new Date(),
+        })
+        .where(
+          and(
+            eq(hitAnalysis.userId, userId),
+            eq(hitAnalysis.gameType, gameType),
+            eq(hitAnalysis.strategy, strategy)
+          )
+        );
+    } else {
+      // Create new
+      await db.insert(hitAnalysis).values({
+        userId,
+        gameType,
+        strategy,
+        totalSuggestions,
+        totalHits,
+        accuracyRate,
+        avgMatchedNumbers,
+        avgMatchedStars: gameType === "euroMillion" ? avgMatchedStars : undefined,
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to update hit analysis:", error);
+    return false;
+  }
+}
+
+export async function getUserHitAnalysisSummary(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const analysis = await db.select().from(hitAnalysis).where(eq(hitAnalysis.userId, userId));
+    return analysis;
+  } catch (error) {
+    console.error("[Database] Failed to get hit analysis summary:", error);
+    return [];
+  }
+}
+
+export async function checkSuggestionsAgainstDraw(gameType: "euroMillion" | "toto") {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    // Get the latest draw
+    const latestDraw = gameType === "euroMillion"
+      ? await db.select().from(euroMillionDraws).orderBy(desc(euroMillionDraws.date)).limit(1)
+      : await db.select().from(totoDraws).orderBy(desc(totoDraws.date)).limit(1);
+
+    if (!latestDraw || latestDraw.length === 0) return [];
+
+    const draw = latestDraw[0];
+    const drawDate = draw.date;
+
+    // Get all unmatched suggestions for this game type
+    const unmatched = await db.select().from(suggestionHistory).where(
+      and(
+        eq(suggestionHistory.gameType, gameType),
+        eq(suggestionHistory.isHit, 0)
+      )
+    );
+
+    const updatedSuggestions = [];
+
+    for (const suggestion of unmatched) {
+      const suggestedNumbers = JSON.parse(suggestion.numbers);
+      let matchedNumbers = 0;
+      let matchedStars = 0;
+      let matchedLucky = 0;
+
+      if (gameType === "euroMillion" && "star1" in draw) {
+        const drawnNumbers = [draw.number1, draw.number2, draw.number3, draw.number4, draw.number5];
+        const drawnStars = [draw.star1, draw.star2];
+        const suggestedStars = suggestion.stars ? JSON.parse(suggestion.stars) : [];
+
+        matchedNumbers = suggestedNumbers.filter((n: number) => drawnNumbers.includes(n)).length;
+        matchedStars = suggestedStars.filter((s: number) => drawnStars.includes(s)).length;
+      } else if (gameType === "toto" && "luckyNumber" in draw) {
+        const drawnNumbers = [draw.number1, draw.number2, draw.number3, draw.number4, draw.number5, draw.number6];
+        matchedNumbers = suggestedNumbers.filter((n: number) => drawnNumbers.includes(n)).length;
+        matchedLucky = suggestion.luckyNumber === draw.luckyNumber ? 1 : 0;
+      }
+
+      if (matchedNumbers > 0 || matchedStars > 0 || matchedLucky > 0) {
+        await updateSuggestionHit(suggestion.id, drawDate, matchedNumbers, matchedStars, matchedLucky);
+        updatedSuggestions.push(suggestion.id);
+        
+        // Update hit analysis for this user/game/strategy
+        await updateHitAnalysis(suggestion.userId, gameType, suggestion.strategy);
+      }
+    }
+
+    return updatedSuggestions;
+  } catch (error) {
+    console.error("[Database] Failed to check suggestions against draw:", error);
     return [];
   }
 }

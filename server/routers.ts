@@ -144,6 +144,66 @@ export const appRouter = router({
     }),
   }),
 
+  suggestions: router({
+    addToHistory: publicProcedure
+      .input(
+        z.object({
+          gameType: z.enum(["euroMillion", "toto"]),
+          strategy: z.enum(["hot", "cold", "balanced"]),
+          numbers: z.array(z.number().int().positive()),
+          stars: z.array(z.number().int().positive()).optional(),
+          luckyNumber: z.number().int().positive().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user) throw new Error("Not authenticated");
+        const result = await db.addSuggestionHistory(
+          ctx.user.id,
+          input.gameType,
+          input.strategy,
+          input.numbers,
+          input.stars,
+          input.luckyNumber
+        );
+        return result;
+      }),
+
+    getHistory: publicProcedure
+      .input(
+        z.object({
+          gameType: z.enum(["euroMillion", "toto"]).optional(),
+        })
+      )
+      .query(async ({ input, ctx }) => {
+        if (!ctx.user) throw new Error("Not authenticated");
+        return await db.getUserSuggestionHistory(ctx.user.id, input.gameType);
+      }),
+
+    getHitAnalysis: publicProcedure
+      .input(
+        z.object({
+          gameType: z.enum(["euroMillion", "toto"]),
+          strategy: z.enum(["hot", "cold", "balanced"]),
+        })
+      )
+      .query(async ({ input, ctx }) => {
+        if (!ctx.user) throw new Error("Not authenticated");
+        return await db.getHitAnalysis(ctx.user.id, input.gameType, input.strategy);
+      }),
+
+    getAnalysisSummary: publicProcedure.query(async ({ ctx }) => {
+      if (!ctx.user) throw new Error("Not authenticated");
+      return await db.getUserHitAnalysisSummary(ctx.user.id);
+    }),
+
+    checkAgainstLatestDraw: publicProcedure
+      .input(z.object({ gameType: z.enum(["euroMillion", "toto"]) }))
+      .mutation(async ({ input }) => {
+        const updated = await db.checkSuggestionsAgainstDraw(input.gameType);
+        return { success: true, updatedCount: updated.length };
+      }),
+  }),
+
   favorites: router({
     add: publicProcedure
       .input(

@@ -104,3 +104,51 @@ export const alerts = mysqlTable("alerts", {
 
 export type Alert = typeof alerts.$inferSelect;
 export type InsertAlert = typeof alerts.$inferInsert;
+
+/**
+ * Suggestion history table - tracks all generated suggestions
+ * Used to analyze accuracy and performance of different strategies
+ */
+export const suggestionHistory = mysqlTable("suggestion_history", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  gameType: mysqlEnum("gameType", ["euroMillion", "toto"]).notNull(),
+  strategy: mysqlEnum("strategy", ["hot", "cold", "balanced"]).notNull(),
+  numbers: text("numbers").notNull(), // JSON array of suggested numbers
+  stars: text("stars"), // JSON array of suggested stars (only for euroMillion)
+  luckyNumber: int("luckyNumber"), // for toto
+  generatedAt: timestamp("generatedAt").defaultNow().notNull(),
+  // Hit analysis fields - populated when draw results come in
+  drawDate: varchar("drawDate", { length: 10 }), // YYYY-MM-DD when matched
+  matchedNumbers: int("matchedNumbers").default(0).notNull(), // count of matched numbers
+  matchedStars: int("matchedStars").default(0), // count of matched stars (euroMillion)
+  matchedLucky: int("matchedLucky").default(0), // for toto
+  isHit: int("isHit").default(0).notNull(), // 0 or 1 - at least one match
+  hitType: varchar("hitType", { length: 50 }), // e.g., "partial", "jackpot", "none"
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SuggestionHistory = typeof suggestionHistory.$inferSelect;
+export type InsertSuggestionHistory = typeof suggestionHistory.$inferInsert;
+
+/**
+ * Hit analysis table - aggregated statistics for suggestion accuracy
+ * Helps identify which strategies perform best over time
+ */
+export const hitAnalysis = mysqlTable("hit_analysis", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  gameType: mysqlEnum("gameType", ["euroMillion", "toto"]).notNull(),
+  strategy: mysqlEnum("strategy", ["hot", "cold", "balanced"]).notNull(),
+  totalSuggestions: int("totalSuggestions").default(0).notNull(),
+  totalHits: int("totalHits").default(0).notNull(), // suggestions that matched at least one number
+  accuracyRate: varchar("accuracyRate", { length: 10 }).default("0%").notNull(), // percentage string
+  avgMatchedNumbers: varchar("avgMatchedNumbers", { length: 10 }).default("0").notNull(),
+  avgMatchedStars: varchar("avgMatchedStars", { length: 10 }), // for euroMillion
+  lastUpdated: timestamp("lastUpdated").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type HitAnalysis = typeof hitAnalysis.$inferSelect;
+export type InsertHitAnalysis = typeof hitAnalysis.$inferInsert;

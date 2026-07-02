@@ -8,6 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { handleScheduledUpdate, handleUpdateAnalysis } from "../scheduled";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -36,6 +37,11 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+  
+  // Scheduled handlers (must be before tRPC)
+  app.post("/api/scheduled/update", handleScheduledUpdate);
+  app.post("/api/scheduled/analysis", handleUpdateAnalysis);
+  
   // tRPC API
   app.use(
     "/api/trpc",

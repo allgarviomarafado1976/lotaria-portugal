@@ -15,6 +15,7 @@ import { KeyCheckerDisplay } from "@/components/KeyCheckerDisplay";
 import { SuggestionsDisplay } from "@/components/SuggestionsDisplay";
 import { InteractiveKeyChecker } from "@/components/InteractiveKeyChecker";
 import { InteractiveSuggestions } from "@/components/InteractiveSuggestions";
+import { SuggestionHistoryDashboard } from "@/components/SuggestionHistoryDashboard";
 import { Star, Bell } from "lucide-react";
 
 export default function Dashboard() {
@@ -164,7 +165,7 @@ export default function Dashboard() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="statistics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="statistics" className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
               Estatísticas
@@ -176,6 +177,10 @@ export default function Dashboard() {
             <TabsTrigger value="history" className="flex items-center gap-2">
               <History className="w-4 h-4" />
               Histórico
+            </TabsTrigger>
+            <TabsTrigger value="suggestions" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Sugestões
             </TabsTrigger>
             <TabsTrigger value="favorites" className="flex items-center gap-2">
               <Star className="w-4 h-4" />
@@ -377,6 +382,11 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Suggestions History Tab */}
+          <TabsContent value="suggestions" className="space-y-6">
+            <SuggestionHistoryDashboard gameType={gameType} />
           </TabsContent>
 
           {/* Favorites Tab */}
