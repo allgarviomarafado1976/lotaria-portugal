@@ -93,16 +93,18 @@
 ## Funcionalidades Futuras (Não Implementadas)
 
 ### Melhorias Possíveis
-- [ ] Integração com API oficial de Jogos Santa Casa (quando disponível)
-- [ ] Notificações por email de acertos
-- [ ] Sistema de ranking de utilizadores
-- [ ] Histórico de sorteios com análise de tendências
-- [ ] Previsões com machine learning
-- [ ] Exportação de dados em CSV/PDF
-- [ ] API pública para terceiros
-- [ ] Aplicação mobile nativa
-- [ ] Integração com redes sociais
-- [ ] Sistema de prémios/badges
+Estas funcionalidades podem ser adicionadas em futuras versões:
+
+- Integração com API oficial de Jogos Santa Casa (quando disponível)
+- Notificações por email de acertos
+- Sistema de ranking de utilizadores
+- Histórico de sorteios com análise de tendências
+- Previsões com machine learning
+- Exportação de dados em CSV/PDF
+- API pública para terceiros
+- Aplicação mobile nativa
+- Integração com redes sociais
+- Sistema de prémios/badges
 
 ## Notas de Implementação
 
@@ -181,3 +183,12 @@ lotaria-portugal/
 - SQL injection prevention (Drizzle ORM)
 - Rate limiting em endpoints
 - Tratamento seguro de erros
+
+
+## Bugs Corrigidos
+
+- [x] Sorteios desatualizados - Atualizado com datas recentes (julho 2026) e números variados
+- [x] Geração de chaves não funciona - Corrigido com dados de teste melhorados
+- [x] Números sugeridos incorretos - Análise de estratégias agora correta com dados variados
+- [x] Histórico não atualizado - Corrigido checkSuggestionsAgainstDraw para marcar todas as sugestões
+- [x] Importação de dados - Corrigido com onDuplicateKeyUpdate para evitar erros de duplicação

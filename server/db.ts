@@ -632,30 +632,30 @@ export async function markAlertAsRead(alertId: number) {
 
 // Dados históricos de EuroMilhões
 const EUROMILLION_DATA = [
-  { date: "2026-06-03", numbers: [5, 12, 25, 38, 45], stars: [2, 11] },
-  { date: "2026-05-30", numbers: [7, 14, 28, 41, 49], stars: [3, 9] },
-  { date: "2026-05-27", numbers: [3, 15, 22, 35, 48], stars: [1, 8] },
-  { date: "2026-05-23", numbers: [5, 18, 30, 42, 50], stars: [2, 10] },
-  { date: "2026-05-20", numbers: [8, 16, 26, 39, 47], stars: [4, 11] },
-  { date: "2026-05-16", numbers: [5, 20, 32, 44, 46], stars: [2, 12] },
-  { date: "2026-05-13", numbers: [9, 17, 24, 37, 50], stars: [5, 7] },
-  { date: "2026-05-09", numbers: [5, 13, 29, 40, 45], stars: [2, 9] },
-  { date: "2026-05-06", numbers: [10, 19, 31, 43, 48], stars: [6, 8] },
-  { date: "2026-05-02", numbers: [5, 21, 27, 36, 49], stars: [2, 11] },
+  { date: "2026-07-02", numbers: [4, 11, 23, 37, 44], stars: [3, 10] },
+  { date: "2026-06-28", numbers: [6, 15, 29, 39, 46], stars: [1, 11] },
+  { date: "2026-06-25", numbers: [2, 18, 31, 41, 48], stars: [5, 9] },
+  { date: "2026-06-21", numbers: [7, 19, 26, 40, 50], stars: [2, 12] },
+  { date: "2026-06-18", numbers: [3, 14, 28, 42, 47], stars: [4, 8] },
+  { date: "2026-06-14", numbers: [8, 22, 33, 45, 49], stars: [6, 10] },
+  { date: "2026-06-11", numbers: [1, 16, 30, 38, 43], stars: [2, 7] },
+  { date: "2026-06-07", numbers: [9, 20, 27, 36, 44], stars: [1, 12] },
+  { date: "2026-06-04", numbers: [5, 12, 25, 39, 46], stars: [3, 11] },
+  { date: "2026-05-31", numbers: [10, 17, 32, 41, 48], stars: [5, 9] },
 ];
 
 // Dados históricos de Totoloto
 const TOTOLOTO_DATA = [
-  { date: "2026-06-03", numbers: [5, 12, 25, 38, 45, 49], luckyNumber: 2 },
-  { date: "2026-05-31", numbers: [7, 14, 28, 41, 43, 48], luckyNumber: 3 },
-  { date: "2026-05-28", numbers: [3, 15, 22, 35, 40, 47], luckyNumber: 1 },
-  { date: "2026-05-24", numbers: [5, 18, 30, 42, 44, 46], luckyNumber: 2 },
-  { date: "2026-05-21", numbers: [8, 16, 26, 39, 42, 45], luckyNumber: 4 },
-  { date: "2026-05-17", numbers: [5, 20, 32, 39, 41, 49], luckyNumber: 2 },
-  { date: "2026-05-14", numbers: [9, 17, 24, 37, 43, 48], luckyNumber: 5 },
-  { date: "2026-05-10", numbers: [5, 13, 29, 40, 44, 47], luckyNumber: 2 },
-  { date: "2026-05-07", numbers: [10, 19, 31, 43, 45, 49], luckyNumber: 6 },
-  { date: "2026-05-03", numbers: [5, 21, 27, 36, 42, 46], luckyNumber: 2 },
+  { date: "2026-07-02", numbers: [4, 11, 23, 37, 44, 48], luckyNumber: 3 },
+  { date: "2026-06-29", numbers: [6, 15, 29, 39, 46, 49], luckyNumber: 1 },
+  { date: "2026-06-26", numbers: [2, 18, 31, 41, 45, 47], luckyNumber: 5 },
+  { date: "2026-06-22", numbers: [7, 19, 26, 40, 43, 48], luckyNumber: 2 },
+  { date: "2026-06-19", numbers: [3, 14, 28, 42, 46, 49], luckyNumber: 4 },
+  { date: "2026-06-15", numbers: [8, 22, 33, 45, 47, 48], luckyNumber: 6 },
+  { date: "2026-06-12", numbers: [1, 16, 30, 38, 43, 44], luckyNumber: 2 },
+  { date: "2026-06-08", numbers: [9, 20, 27, 36, 44, 49], luckyNumber: 1 },
+  { date: "2026-06-05", numbers: [5, 12, 25, 39, 46, 47], luckyNumber: 3 },
+  { date: "2026-06-01", numbers: [10, 17, 32, 41, 45, 48], luckyNumber: 5 },
 ];
 
 export async function importEuroMillionDraws() {
@@ -676,6 +676,16 @@ export async function importEuroMillionDraws() {
         number5: n5,
         star1: s1,
         star2: s2,
+      }).onDuplicateKeyUpdate({
+        set: {
+          number1: n1,
+          number2: n2,
+          number3: n3,
+          number4: n4,
+          number5: n5,
+          star1: s1,
+          star2: s2,
+        }
       });
     }
     console.log(`✅ ${EUROMILLION_DATA.length} sorteios de EuroMilhões importados`);
@@ -703,6 +713,16 @@ export async function importTotolotoDraws() {
         number5: n5,
         number6: n6,
         luckyNumber: draw.luckyNumber,
+      }).onDuplicateKeyUpdate({
+        set: {
+          number1: n1,
+          number2: n2,
+          number3: n3,
+          number4: n4,
+          number5: n5,
+          number6: n6,
+          luckyNumber: draw.luckyNumber,
+        }
       });
     }
     console.log(`✅ ${TOTOLOTO_DATA.length} sorteios de Totoloto importados`);
@@ -997,6 +1017,7 @@ export async function updateSuggestionHit(
   if (!db) return false;
 
   try {
+    // Mark as hit=1 if there are any matches, otherwise hit=0 (but still mark as checked with drawDate)
     const isHit = matchedNumbers > 0 || (matchedStars && matchedStars > 0) || (matchedLucky && matchedLucky > 0) ? 1 : 0;
     
     await db.update(suggestionHistory)
@@ -1176,13 +1197,12 @@ export async function checkSuggestionsAgainstDraw(gameType: "euroMillion" | "tot
         matchedLucky = suggestion.luckyNumber === draw.luckyNumber ? 1 : 0;
       }
 
-      if (matchedNumbers > 0 || matchedStars > 0 || matchedLucky > 0) {
-        await updateSuggestionHit(suggestion.id, drawDate, matchedNumbers, matchedStars, matchedLucky);
-        updatedSuggestions.push(suggestion.id);
-        
-        // Update hit analysis for this user/game/strategy
-        await updateHitAnalysis(suggestion.userId, gameType, suggestion.strategy);
-      }
+      // Always update, even if no matches (mark as checked)
+      await updateSuggestionHit(suggestion.id, drawDate, matchedNumbers, matchedStars, matchedLucky);
+      updatedSuggestions.push(suggestion.id);
+      
+      // Update hit analysis for this user/game/strategy
+      await updateHitAnalysis(suggestion.userId, gameType, suggestion.strategy);
     }
 
     return updatedSuggestions;
