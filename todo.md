@@ -73,7 +73,7 @@
 - [x] Testes para suggestion history
 - [x] Testes para hit analysis
 - [x] Testes para verificação de sugestões
-- [x] 9 testes passando (100% sucesso)
+- [x] Testes para estatísticas (33 testes passando 100%)
 
 ### Design e UX
 - [x] Tema claro/escuro elegante
@@ -89,6 +89,28 @@
 - [x] CRON_SETUP.md com guia de configuração
 - [x] Comentários no código
 - [x] Tipos TypeScript bem documentados
+
+## Secção de Estatísticas Avançadas (COMPLETA)
+
+- [x] Criar componente HeatmapChart para visualizar frequência de números
+- [x] Implementar gráfico de barras para top 10 números mais frequentes
+- [x] Adicionar gráfico de pizza para distribuição de números
+- [x] Criar dashboard de estatísticas com abas por jogo
+- [x] Implementar filtros de período (1, 3, 6, 12 meses)
+- [x] Adicionar análise comparativa quente vs frio
+- [x] Criar tabela detalhada com ranking de números
+- [x] Testes para componentes de gráficos (33 testes passando)
+
+## Bugs Corrigidos
+
+- [x] Sorteios desatualizados - Atualizado com datas recentes (julho 2026)
+- [x] Geração de chaves não funciona - Corrigido com dados de teste melhorados
+- [x] Números sugeridos incorretos - Análise de estratégias agora correta
+- [x] Histórico não atualizado - Corrigido checkSuggestionsAgainstDraw
+- [x] Importação de dados - Corrigido com onDuplicateKeyUpdate
+- [x] Lógica de estratégias - hot/cold/balanced com números únicos garantidos
+- [x] Histórico guardado - Sugestões salvas automaticamente na base de dados
+- [x] Histórico exibido - Dashboard com invalidação imediata + refetch automático
 
 ## Funcionalidades Futuras (Não Implementadas)
 
@@ -128,7 +150,7 @@ lotaria-portugal/
 ├── client/                    # Frontend React
 │   ├── src/
 │   │   ├── components/       # Componentes reutilizáveis
-│   │   ├── pages/            # Páginas (Home, Dashboard)
+│   │   ├── pages/            # Páginas (Home, Dashboard, Statistics)
 │   │   ├── contexts/         # React contexts
 │   │   ├── hooks/            # Custom hooks
 │   │   └── lib/              # Utilitários
@@ -183,33 +205,3 @@ lotaria-portugal/
 - SQL injection prevention (Drizzle ORM)
 - Rate limiting em endpoints
 - Tratamento seguro de erros
-
-
-## Bugs Corrigidos
-
-- [x] Sorteios desatualizados - Atualizado com datas recentes (julho 2026) e números variados
-- [x] Geração de chaves não funciona - Corrigido com dados de teste melhorados
-- [x] Números sugeridos incorretos - Análise de estratégias agora correta com dados variados
-- [x] Histórico não atualizado - Corrigido checkSuggestionsAgainstDraw para marcar todas as sugestões
-- [x] Importação de dados - Corrigido com onDuplicateKeyUpdate para evitar erros de duplicação
-
-
-## Nova Feature: Secção de Estatísticas Avançadas
-
-- [ ] Criar componente HeatmapChart para visualizar frequência de números
-- [ ] Implementar gráfico de barras para top 10 números mais frequentes
-- [ ] Adicionar gráfico de pizza para distribuição de números
-- [ ] Criar dashboard de estatísticas com abas por jogo
-- [ ] Implementar filtros de período (1, 3, 6, 12 meses)
-- [ ] Adicionar análise comparativa quente vs frio
-- [ ] Criar tabela detalhada com ranking de números
-- [ ] Implementar exportação de dados (CSV)
-- [ ] Testes para componentes de gráficos
-- [ ] Checkpoint final
-
-
-## Bugs Corrigidos
-
-- [x] Lógica de estratégias corrigida - hot/cold/balanced agora funcionam com números únicos garantidos
-- [x] Histórico agora é guardado automaticamente quando sugestões são geradas
-- [x] Histórico agora é exibido e atualizado automaticamente a cada 30 segundos

@@ -363,6 +363,57 @@ export function StatisticsPage() {
               </div>
             </div>
           )}
+          {/* Detailed Ranking Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {gameType === "euroMillion" ? "Ranking Completo de Números" : "Ranking Completo de Números"}
+              </CardTitle>
+              <CardDescription>
+                {gameType === "euroMillion" 
+                  ? "Todos os 50 números ordenados por frequência"
+                  : "Todos os 49 números ordenados por frequência"
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-2 px-4 font-semibold">Posição</th>
+                      <th className="text-left py-2 px-4 font-semibold">Número</th>
+                      <th className="text-left py-2 px-4 font-semibold">Frequência</th>
+                      <th className="text-left py-2 px-4 font-semibold">Percentagem</th>
+                      <th className="text-left py-2 px-4 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(gameType === "euroMillion" ? euroNumberAnalysisQuery.data : totoNumberAnalysisQuery.data)?.map((item: any, idx: number) => {
+                      const total = (gameType === "euroMillion" ? euroNumberAnalysisQuery.data : totoNumberAnalysisQuery.data)?.reduce((sum: number, d: any) => sum + d.frequency, 0) || 1;
+                      const percentage = ((item.frequency / total) * 100).toFixed(1);
+                      const isHot = idx < 10;
+                      const isCold = idx >= (gameType === "euroMillion" ? 40 : 39);
+                      
+                      return (
+                        <tr key={item.number} className="border-b hover:bg-muted/50">
+                          <td className="py-2 px-4">{idx + 1}</td>
+                          <td className="py-2 px-4 font-semibold">{item.number}</td>
+                          <td className="py-2 px-4">{item.frequency}</td>
+                          <td className="py-2 px-4">{percentage}%</td>
+                          <td className="py-2 px-4">
+                            {isHot && <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-semibold">Quente</span>}
+                            {isCold && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">Frio</span>}
+                            {!isHot && !isCold && <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Normal</span>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </>
       )}
     </div>
