@@ -204,26 +204,52 @@ export async function suggestEuroMillionKey(strategy: "hot" | "cold" | "balanced
     suggestedNumbers = allNumbers.sort(() => Math.random() - 0.5).slice(0, 5).sort((a, b) => a - b);
     suggestedStars = allStars.sort(() => Math.random() - 0.5).slice(0, 2).sort((a, b) => a - b);
   } else if (strategy === "hot") {
+    // Take top 5 hot numbers
     suggestedNumbers = stats.topNumbers.slice(0, 5).map((n) => n.number);
+    // If less than 5, fill with more hot numbers
+    if (suggestedNumbers.length < 5) {
+      const remaining = stats.topNumbers.slice(5, 10).map((n) => n.number);
+      suggestedNumbers = [...suggestedNumbers, ...remaining].slice(0, 5);
+    }
     suggestedStars = stats.topStars.slice(0, 2).map((s) => s.number);
   } else if (strategy === "cold") {
+    // Take top 5 cold numbers (least frequent)
     suggestedNumbers = stats.bottomNumbers.slice(0, 5).map((n) => n.number);
+    // If less than 5, fill with more cold numbers
+    if (suggestedNumbers.length < 5) {
+      const remaining = stats.bottomNumbers.slice(5, 10).map((n) => n.number);
+      suggestedNumbers = [...suggestedNumbers, ...remaining].slice(0, 5);
+    }
     suggestedStars = stats.bottomStars.slice(0, 2).map((s) => s.number);
   } else {
-    // Balanced: mix of hot and cold
-    suggestedNumbers = [
-      ...stats.topNumbers.slice(0, 3).map((n) => n.number),
-      ...stats.bottomNumbers.slice(0, 2).map((n) => n.number),
-    ];
+    // Balanced: mix of hot and cold - 3 hot + 2 cold
+    const hotNumbers = stats.topNumbers.slice(0, 3).map((n) => n.number);
+    const coldNumbers = stats.bottomNumbers.slice(0, 2).map((n) => n.number);
+    suggestedNumbers = [...hotNumbers, ...coldNumbers];
+    
+    // Ensure we have 5 unique numbers
+    const uniqueNumbers = Array.from(new Set(suggestedNumbers));
+    if (uniqueNumbers.length < 5) {
+      // Add more hot numbers if needed
+      const additional = stats.topNumbers.slice(3, 10).map((n) => n.number);
+      suggestedNumbers = [...uniqueNumbers, ...additional].slice(0, 5);
+    } else {
+      suggestedNumbers = uniqueNumbers.slice(0, 5);
+    }
+    
     suggestedStars = [
       stats.topStars[0]?.number || 1,
       stats.bottomStars[0]?.number || 2,
     ];
   }
 
+  // Ensure unique numbers and stars
+  const uniqueNumbers = Array.from(new Set(suggestedNumbers)).sort((a, b) => a - b);
+  const uniqueStars = Array.from(new Set(suggestedStars)).sort((a, b) => a - b);
+
   return {
-    numbers: suggestedNumbers.sort((a, b) => a - b),
-    stars: suggestedStars.sort((a, b) => a - b),
+    numbers: uniqueNumbers.slice(0, 5),
+    stars: uniqueStars.slice(0, 2),
     strategy,
   };
 }
@@ -339,22 +365,47 @@ export async function suggestTotoKey(strategy: "hot" | "cold" | "balanced") {
     suggestedNumbers = allNumbers.sort(() => Math.random() - 0.5).slice(0, 6).sort((a, b) => a - b);
     suggestedLucky = allLucky[Math.floor(Math.random() * allLucky.length)];
   } else if (strategy === "hot") {
+    // Take top 6 hot numbers
     suggestedNumbers = stats.topNumbers.slice(0, 6).map((n) => n.number);
+    // If less than 6, fill with more hot numbers
+    if (suggestedNumbers.length < 6) {
+      const remaining = stats.topNumbers.slice(6, 10).map((n) => n.number);
+      suggestedNumbers = [...suggestedNumbers, ...remaining].slice(0, 6);
+    }
     suggestedLucky = stats.topLuckyNumbers[0]?.number || 1;
   } else if (strategy === "cold") {
+    // Take top 6 cold numbers (least frequent)
     suggestedNumbers = stats.bottomNumbers.slice(0, 6).map((n) => n.number);
+    // If less than 6, fill with more cold numbers
+    if (suggestedNumbers.length < 6) {
+      const remaining = stats.bottomNumbers.slice(6, 10).map((n) => n.number);
+      suggestedNumbers = [...suggestedNumbers, ...remaining].slice(0, 6);
+    }
     suggestedLucky = stats.bottomLuckyNumbers[0]?.number || 1;
   } else {
-    // Balanced: mix of hot and cold
-    suggestedNumbers = [
-      ...stats.topNumbers.slice(0, 4).map((n) => n.number),
-      ...stats.bottomNumbers.slice(0, 2).map((n) => n.number),
-    ];
+    // Balanced: mix of hot and cold - 4 hot + 2 cold
+    const hotNumbers = stats.topNumbers.slice(0, 4).map((n) => n.number);
+    const coldNumbers = stats.bottomNumbers.slice(0, 2).map((n) => n.number);
+    suggestedNumbers = [...hotNumbers, ...coldNumbers];
+    
+    // Ensure we have 6 unique numbers
+    const uniqueNumbers = Array.from(new Set(suggestedNumbers));
+    if (uniqueNumbers.length < 6) {
+      // Add more hot numbers if needed
+      const additional = stats.topNumbers.slice(4, 10).map((n) => n.number);
+      suggestedNumbers = [...uniqueNumbers, ...additional].slice(0, 6);
+    } else {
+      suggestedNumbers = uniqueNumbers.slice(0, 6);
+    }
+    
     suggestedLucky = stats.topLuckyNumbers[0]?.number || 1;
   }
 
+  // Ensure unique numbers
+  const uniqueNumbers = Array.from(new Set(suggestedNumbers)).sort((a, b) => a - b);
+
   return {
-    numbers: suggestedNumbers.sort((a, b) => a - b),
+    numbers: uniqueNumbers.slice(0, 6),
     luckyNumber: suggestedLucky,
     strategy,
   };

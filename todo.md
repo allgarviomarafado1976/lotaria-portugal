@@ -192,3 +192,24 @@ lotaria-portugal/
 - [x] Números sugeridos incorretos - Análise de estratégias agora correta com dados variados
 - [x] Histórico não atualizado - Corrigido checkSuggestionsAgainstDraw para marcar todas as sugestões
 - [x] Importação de dados - Corrigido com onDuplicateKeyUpdate para evitar erros de duplicação
+
+
+## Nova Feature: Secção de Estatísticas Avançadas
+
+- [ ] Criar componente HeatmapChart para visualizar frequência de números
+- [ ] Implementar gráfico de barras para top 10 números mais frequentes
+- [ ] Adicionar gráfico de pizza para distribuição de números
+- [ ] Criar dashboard de estatísticas com abas por jogo
+- [ ] Implementar filtros de período (1, 3, 6, 12 meses)
+- [ ] Adicionar análise comparativa quente vs frio
+- [ ] Criar tabela detalhada com ranking de números
+- [ ] Implementar exportação de dados (CSV)
+- [ ] Testes para componentes de gráficos
+- [ ] Checkpoint final
+
+
+## Bugs Corrigidos
+
+- [x] Lógica de estratégias corrigida - hot/cold/balanced agora funcionam com números únicos garantidos
+- [x] Histórico agora é guardado automaticamente quando sugestões são geradas
+- [x] Histórico agora é exibido e atualizado automaticamente a cada 30 segundos

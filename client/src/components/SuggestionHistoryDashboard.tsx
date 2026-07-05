@@ -16,24 +16,39 @@ interface SuggestionHistoryDashboardProps {
 export function SuggestionHistoryDashboard({ gameType }: SuggestionHistoryDashboardProps) {
   const [selectedStrategy, setSelectedStrategy] = useState<"hot" | "cold" | "balanced">("hot");
 
-  // Queries
-  const historyQuery = trpc.suggestions.getHistory.useQuery({ gameType });
-  const analysisSummaryQuery = trpc.suggestions.getAnalysisSummary.useQuery();
-  const hitAnalysisQuery = trpc.suggestions.getHitAnalysis.useQuery({
-    gameType,
-    strategy: selectedStrategy,
-  });
+  // Queries com refetch automático a cada 30 segundos
+  const historyQuery = trpc.suggestions.getHistory.useQuery(
+    { gameType },
+    { refetchInterval: 30000 }
+  );
+  const analysisSummaryQuery = trpc.suggestions.getAnalysisSummary.useQuery(
+    undefined,
+    { refetchInterval: 30000 }
+  );
+  const hitAnalysisQuery = trpc.suggestions.getHitAnalysis.useQuery(
+    {
+      gameType,
+      strategy: selectedStrategy,
+    },
+    { refetchInterval: 30000 }
+  );
+
+  // Get utils para invalidação
+  const utils = trpc.useUtils();
 
   // Mutations
-  const checkAgainstDrawMutation = trpc.suggestions.checkAgainstLatestDraw.useMutation();
+  const checkAgainstDrawMutation = trpc.suggestions.checkAgainstLatestDraw.useMutation({
+    onSuccess: () => {
+      // Invalidar queries para refetch imediato
+      utils.suggestions.getHistory.invalidate();
+      utils.suggestions.getAnalysisSummary.invalidate();
+      utils.suggestions.getHitAnalysis.invalidate();
+    },
+  });
 
   const handleCheckAgainstDraw = async () => {
     try {
       await checkAgainstDrawMutation.mutateAsync({ gameType });
-      // Refetch data
-      historyQuery.refetch();
-      analysisSummaryQuery.refetch();
-      hitAnalysisQuery.refetch();
     } catch (error) {
       console.error("Erro ao verificar contra sorteio:", error);
     }
@@ -43,6 +58,12 @@ export function SuggestionHistoryDashboard({ gameType }: SuggestionHistoryDashbo
   const historyData = historyQuery.data || [];
   const analysisSummary = analysisSummaryQuery.data || [];
   const hitAnalysis = hitAnalysisQuery.data;
+
+  // Loading state
+  const isLoading = historyQuery.isLoading || analysisSummaryQuery.isLoading || hitAnalysisQuery.isLoading;
+
+  // Empty state
+  const isEmpty = !isLoading && historyData.length === 0;
 
   // Filter analysis by game type
   const gameAnalysis = analysisSummary.filter((a) => a.gameType === gameType);
@@ -102,7 +123,31 @@ export function SuggestionHistoryDashboard({ gameType }: SuggestionHistoryDashbo
         </Button>
       </div>
 
+      {/* Empty State */}
+      {isEmpty && (
+        <Card className="border-2 border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Zap className="w-12 h-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhuma sugestão gerada ainda</h3>
+            <p className="text-sm text-muted-foreground text-center">
+              Gere sugestões usando as estratégias de números quentes, frios ou equilibrados para ver o histórico aqui.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Loading State */}
+      {isLoading && (
+        <Card>
+          <CardContent className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-3 text-muted-foreground">Carregando histórico...</span>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Seletor de estratégia */}
+      {!isEmpty && (
       <div className="flex gap-2">
         {(["hot", "cold", "balanced"] as const).map((strategy) => (
           <Button
@@ -118,6 +163,7 @@ export function SuggestionHistoryDashboard({ gameType }: SuggestionHistoryDashbo
           </Button>
         ))}
       </div>
+      )}
 
       {/* Análise de Precisão */}
       {hitAnalysis && (

@@ -74,6 +74,16 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
     { enabled: false }
   );
 
+  // Mutation para guardar sugestão no histórico
+  const addToHistoryMutation = trpc.suggestions.addToHistory.useMutation({
+    onSuccess: () => {
+      toast.success("Sugestão guardada no histórico!");
+    },
+    onError: (error) => {
+      toast.error(`Erro ao guardar: ${error.message}`);
+    },
+  });
+
   // Efeito para atualizar quando as queries completam
   useEffect(() => {
     if (gameType === "euroMillion" && euroSuggestQuery.data && euroAnalysisQuery.data && euroStarAnalysisQuery.data) {
@@ -83,8 +93,16 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
         onSuggestionsGenerated(euroSuggestQuery.data);
       }
       toast.success("Sugestão gerada com sucesso!");
+      
+      // Guardar no histórico automaticamente
+      addToHistoryMutation.mutate({
+        gameType: "euroMillion",
+        strategy: euroSuggestQuery.data.strategy,
+        numbers: euroSuggestQuery.data.numbers,
+        stars: euroSuggestQuery.data.stars,
+      });
     }
-  }, [euroSuggestQuery.data, euroAnalysisQuery.data, euroStarAnalysisQuery.data, gameType, onSuggestionsGenerated]);
+  }, [euroSuggestQuery.data, euroAnalysisQuery.data, euroStarAnalysisQuery.data, gameType, onSuggestionsGenerated, addToHistoryMutation]);
 
   useEffect(() => {
     if (gameType === "toto" && totoSuggestQuery.data && totoAnalysisQuery.data && totoLuckyAnalysisQuery.data) {
@@ -94,8 +112,16 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
         onSuggestionsGenerated(totoSuggestQuery.data);
       }
       toast.success("Sugestão gerada com sucesso!");
+      
+      // Guardar no histórico automaticamente
+      addToHistoryMutation.mutate({
+        gameType: "toto",
+        strategy: totoSuggestQuery.data.strategy,
+        numbers: totoSuggestQuery.data.numbers,
+        luckyNumber: totoSuggestQuery.data.luckyNumber,
+      });
     }
-  }, [totoSuggestQuery.data, totoAnalysisQuery.data, totoLuckyAnalysisQuery.data, gameType, onSuggestionsGenerated]);
+  }, [totoSuggestQuery.data, totoAnalysisQuery.data, totoLuckyAnalysisQuery.data, gameType, onSuggestionsGenerated, addToHistoryMutation]);
 
   const handleGenerateSuggestion = async () => {
     setIsGenerating(true);
