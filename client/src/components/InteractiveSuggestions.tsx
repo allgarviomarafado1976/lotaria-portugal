@@ -74,9 +74,16 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
     { enabled: false }
   );
 
+  // Get utils para invalidação
+  const utils = trpc.useUtils();
+
   // Mutation para guardar sugestão no histórico
   const addToHistoryMutation = trpc.suggestions.addToHistory.useMutation({
     onSuccess: () => {
+      // Invalidar queries de histórico para refetch imediato
+      utils.suggestions.getHistory.invalidate();
+      utils.suggestions.getAnalysisSummary.invalidate();
+      utils.suggestions.getHitAnalysis.invalidate();
       toast.success("Sugestão guardada no histórico!");
     },
     onError: (error) => {
