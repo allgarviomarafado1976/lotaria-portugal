@@ -222,3 +222,25 @@ lotaria-portugal/
 - [x] Histórico é exibido corretamente na página com invalidação imediata + refetch automático
 - [x] 11 novos testes end-to-end validando fluxo completo (44/44 testes passando)
 - [x] Erro "Maximum update depth exceeded" corrigido com useMemo nos gráficos
+
+
+## Bugs Corrigidos (Segunda Rodada)
+
+- [x] Sugestões não correspondentes ao histórico - Corrigido handleGenerateSuggestion com try/catch e finally
+- [x] App bloqueia ao solicitar segunda sugestão - Adicionado setIsGenerating(false) no finally
+- [x] Testes falhando por dados antigos - Adicionada limpeza de dados antes de testes (beforeAll e beforeEach)
+- [x] 40/40 testes passando (100% sucesso)
+
+## Novas Features a Implementar
+
+- [ ] Web scraping da API oficial de Jogos Santa Casa
+- [ ] Gráfico de análise temporal de frequências (evolução mês a mês)
+- [ ] Integração automática de sorteios via cron job
+
+
+## Gaps a Resolver
+
+- [ ] Remover ou reconciliar lógica duplicada de persistência em InteractiveSuggestions (useEffect vs handleGenerateSuggestion)
+- [ ] Adicionar teste E2E que confirme sugestão exibida = sugestão persistida no histórico
+- [ ] Padronizar isolamento dos testes com limpeza em beforeEach
+- [ ] Documentar contagem total de testes estável (atualmente 40/40)

@@ -134,18 +134,57 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
     setIsGenerating(true);
     setSuggestedKey(null);
 
-    if (gameType === "euroMillion") {
-      await Promise.all([
-        euroSuggestQuery.refetch(),
-        euroAnalysisQuery.refetch(),
-        euroStarAnalysisQuery.refetch(),
-      ]);
-    } else {
-      await Promise.all([
-        totoSuggestQuery.refetch(),
-        totoAnalysisQuery.refetch(),
-        totoLuckyAnalysisQuery.refetch(),
-      ]);
+    try {
+      if (gameType === "euroMillion") {
+        const results = await Promise.all([
+          euroSuggestQuery.refetch(),
+          euroAnalysisQuery.refetch(),
+          euroStarAnalysisQuery.refetch(),
+        ]);
+        
+        if (results[0].data && results[1].data && results[2].data) {
+          setSuggestedKey(results[0].data);
+          if (onSuggestionsGenerated) {
+            onSuggestionsGenerated(results[0].data);
+          }
+          toast.success("Sugestão gerada com sucesso!");
+          
+          // Guardar no histórico
+          addToHistoryMutation.mutate({
+            gameType: "euroMillion",
+            strategy: results[0].data.strategy,
+            numbers: results[0].data.numbers,
+            stars: results[0].data.stars,
+          });
+        }
+      } else {
+        const results = await Promise.all([
+          totoSuggestQuery.refetch(),
+          totoAnalysisQuery.refetch(),
+          totoLuckyAnalysisQuery.refetch(),
+        ]);
+        
+        if (results[0].data && results[1].data && results[2].data) {
+          setSuggestedKey(results[0].data);
+          if (onSuggestionsGenerated) {
+            onSuggestionsGenerated(results[0].data);
+          }
+          toast.success("Sugestão gerada com sucesso!");
+          
+          // Guardar no histórico
+          addToHistoryMutation.mutate({
+            gameType: "toto",
+            strategy: results[0].data.strategy,
+            numbers: results[0].data.numbers,
+            luckyNumber: results[0].data.luckyNumber,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao gerar sugestão:", error);
+      toast.error("Erro ao gerar sugestão");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
