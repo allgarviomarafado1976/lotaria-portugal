@@ -109,7 +109,7 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
         stars: euroSuggestQuery.data.stars,
       });
     }
-  }, [euroSuggestQuery.data, euroAnalysisQuery.data, euroStarAnalysisQuery.data, gameType, onSuggestionsGenerated, addToHistoryMutation]);
+  }, [euroSuggestQuery.data, euroAnalysisQuery.data, euroStarAnalysisQuery.data, gameType, onSuggestionsGenerated]);
 
   useEffect(() => {
     if (gameType === "toto" && totoSuggestQuery.data && totoAnalysisQuery.data && totoLuckyAnalysisQuery.data) {
@@ -128,7 +128,7 @@ export function InteractiveSuggestions({ gameType, onSuggestionsGenerated }: Int
         luckyNumber: totoSuggestQuery.data.luckyNumber,
       });
     }
-  }, [totoSuggestQuery.data, totoAnalysisQuery.data, totoLuckyAnalysisQuery.data, gameType, onSuggestionsGenerated, addToHistoryMutation]);
+  }, [totoSuggestQuery.data, totoAnalysisQuery.data, totoLuckyAnalysisQuery.data, gameType, onSuggestionsGenerated]);
 
   const handleGenerateSuggestion = async () => {
     setIsGenerating(true);

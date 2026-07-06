@@ -209,9 +209,11 @@ lotaria-portugal/
 
 ## Erro React Corrigido
 
-- [x] "Maximum update depth exceeded" - Causa: dados de gráficos sendo recriados a cada render
-- [x] Solução: Adicionado useMemo em FrequencyChart e SuggestionHistoryDashboard
-- [x] Resultado: Servidor rodando sem erros, página carrega corretamente
+- [x] "Maximum update depth exceeded" - Causa 1: dados de gráficos sendo recriados a cada render
+- [x] Solução 1: Adicionado useMemo em FrequencyChart e SuggestionHistoryDashboard
+- [x] "Maximum update depth exceeded" - Causa 2: addToHistoryMutation como dependência de useEffect
+- [x] Solução 2: Removido addToHistoryMutation das dependências de useEffect em InteractiveSuggestions
+- [x] Resultado: Servidor rodando sem erros, página /dashboard carrega corretamente
 
 ## Bugs Corrigidos (Request Recente)
 
