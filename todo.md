@@ -207,9 +207,16 @@ lotaria-portugal/
 - Tratamento seguro de erros
 
 
+## Erro React Corrigido
+
+- [x] "Maximum update depth exceeded" - Causa: dados de gráficos sendo recriados a cada render
+- [x] Solução: Adicionado useMemo em FrequencyChart e SuggestionHistoryDashboard
+- [x] Resultado: Servidor rodando sem erros, página carrega corretamente
+
 ## Bugs Corrigidos (Request Recente)
 
 - [x] Lógica de estratégias corrigida - hot/cold/balanced geram chaves corretas com números únicos
 - [x] Histórico é guardado automaticamente na base de dados quando sugestões são geradas
 - [x] Histórico é exibido corretamente na página com invalidação imediata + refetch automático
 - [x] 11 novos testes end-to-end validando fluxo completo (44/44 testes passando)
+- [x] Erro "Maximum update depth exceeded" corrigido com useMemo nos gráficos

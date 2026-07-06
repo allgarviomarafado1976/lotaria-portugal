@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -66,18 +66,18 @@ export function SuggestionHistoryDashboard({ gameType }: SuggestionHistoryDashbo
   const isEmpty = !isLoading && historyData.length === 0;
 
   // Filter analysis by game type
-  const gameAnalysis = analysisSummary.filter((a) => a.gameType === gameType);
+  const gameAnalysis = useMemo(() => analysisSummary.filter((a) => a.gameType === gameType), [analysisSummary, gameType]);
 
   // Prepare strategy comparison data
-  const strategyData = gameAnalysis.map((a) => ({
+  const strategyData = useMemo(() => gameAnalysis.map((a) => ({
     strategy: a.strategy.charAt(0).toUpperCase() + a.strategy.slice(1),
     accuracy: parseFloat(a.accuracyRate) || 0,
     totalSuggestions: a.totalSuggestions,
     totalHits: a.totalHits,
-  }));
+  })), [gameAnalysis]);
 
   // Prepare accuracy trend data
-  const accuracyTrendData = historyData
+  const accuracyTrendData = useMemo(() => historyData
     .filter((h) => h.drawDate)
     .slice(0, 10)
     .reverse()
@@ -85,10 +85,10 @@ export function SuggestionHistoryDashboard({ gameType }: SuggestionHistoryDashbo
       date: h.drawDate ? format(new Date(h.drawDate), "dd/MM", { locale: ptBR }) : `Sugestão ${idx + 1}`,
       matched: h.matchedNumbers || 0,
       strategy: h.strategy,
-    }));
+    })), [historyData]);
 
   // Prepare hit distribution data
-  const hitDistribution = [
+  const hitDistribution = useMemo(() => [
     {
       name: "Com Acertos",
       value: historyData.filter((h) => h.isHit === 1).length,
@@ -99,7 +99,7 @@ export function SuggestionHistoryDashboard({ gameType }: SuggestionHistoryDashbo
       value: historyData.filter((h) => h.isHit === 0).length,
       color: "#ef4444",
     },
-  ];
+  ], [historyData]);
 
   const COLORS = ["#10b981", "#ef4444"];
 

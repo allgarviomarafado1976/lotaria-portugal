@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +41,17 @@ export function FrequencyChart({ topNumbers, bottomNumbers, gameType }: Frequenc
       value: item.frequency,
     }));
   }, [topNumbers]);
+
+  // Prepare data for comparison chart
+  const comparisonData = useMemo(() => {
+    return topNumbers
+      .slice(0, 10)
+      .map((item, idx) => ({
+        number: `${item.number}`,
+        quentes: item.frequency,
+        frios: bottomNumbers[idx]?.frequency || 0,
+      }));
+  }, [topNumbers, bottomNumbers]);
 
   // Colors for pie chart
   const COLORS = [
@@ -141,15 +152,7 @@ export function FrequencyChart({ topNumbers, bottomNumbers, gameType }: Frequenc
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart
-              data={topNumbers
-                .slice(0, 10)
-                .map((item, idx) => ({
-                  number: `${item.number}`,
-                  quentes: item.frequency,
-                  frios: bottomNumbers[idx]?.frequency || 0,
-                }))}
-            >
+            <BarChart data={comparisonData}>
               <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
               <XAxis dataKey="number" />
               <YAxis />
